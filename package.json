@@ -1,0 +1,25 @@
+{
+  "name": "weeks",
+  "version": "1.0.0",
+  "description": "Visualise the weeks of your life",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "17.0.2",
+    "react-dom": "17.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ozzzzz/weeks.git"
+  },
+  "author": "Bogdan Neterebskii",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ozzzzz/weeks/issues"
+  },
+  "homepage": "https://github.com/ozzzzz/weeks#readme"
+}
