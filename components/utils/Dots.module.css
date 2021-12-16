@@ -1,0 +1,16 @@
+.dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 1px;
+}
+
+.isBehind {
+  background-color: #bbb;
+}
+
+.isLeft {
+  background-color: rgb(87, 177, 110);
+}
+

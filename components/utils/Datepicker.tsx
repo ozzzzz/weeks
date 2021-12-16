@@ -1,16 +1,13 @@
-import React from "react";
-import {
-  MuiPickersUtilsProvider,
-  KeyboardTimePicker,
-  KeyboardDatePicker,
-} from "@material-ui/pickers";
+import React, { Dispatch, SetStateAction } from "react";
+import { KeyboardDatePicker } from "@material-ui/pickers";
+import { Dayjs } from "dayjs";
 
 interface DateProp {
-  selected: any;
-  update: (value: any) => any;
+  selected: Dayjs;
+  update: Dispatch<SetStateAction<Dayjs>>;
 }
 
-export default function Date(prop: DateProp): JSX.Element {
+export default function DatePicker(prop: DateProp): JSX.Element {
   return (
     <KeyboardDatePicker
       disableToolbar
