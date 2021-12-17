@@ -3,11 +3,12 @@ import Dots from "../utils/Dots";
 import Datepicker from "../utils/Datepicker";
 
 import React from "react";
-import { Grid, Paper } from "@material-ui/core";
+import { Box, Grid, Paper } from "@material-ui/core";
 import { makeStyles, createStyles } from "@material-ui/core/styles";
 import dayjs, { Dayjs } from "dayjs";
 import Userdata from "../../utils/userdata";
 import InfoCard from "../utils/InfoCard";
+import Timeline from "../utils/Timeline";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -54,7 +55,6 @@ export default function Weeks(): JSX.Element {
 
   const dots = (
       <Dots userdata={userdata} />
-    // generateDots(userdata.getWeeksBehind())
   );
 
   // var now = new Date();
@@ -68,7 +68,9 @@ export default function Weeks(): JSX.Element {
       </Head>
       <>
         {controls}
-        {cards}
+        <Timeline userdata={userdata} />
+        <Box>&nbsp;</Box>
+        {/* {cards} */}
         {dots}
       </>
     </>

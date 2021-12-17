@@ -1,0 +1,14 @@
+$primary-color: #fff;
+
+$left-color: #e0fbfc;
+$behind-color: #ee6c4d;
+$lighter-color: #98c1d9;
+$darker-color: #3d5a80;
+
+:export {
+  primaryColor: $primary-color;
+  leftColor: $left-color;
+  behindColor: $behind-color;
+  lighterColor: $lighter-color;
+  darkerColor: $darker-color;
+}

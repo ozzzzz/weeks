@@ -3,6 +3,10 @@ class Userdata {
   private millisBehind: number;
   private weeksBehind: number;
 
+  private readonly MILLISECONDS_IN_WEEK = 1000 * 60 * 60 * 24 * 7;
+  private readonly HUNDRED_YEARS = 100;
+
+
   constructor(birthDate: Date) {
     this.birth = birthDate;
     const now = new Date();
@@ -20,6 +24,10 @@ class Userdata {
       return this.weeksBehind;
   }
 
+  public isBelowExpectThreshold(): boolean {
+    return this.getWeeksBehind() < this.getWeeksExpect();
+  }
+
   public getWeeksLeft(): number {
       return this.getWeeksExpect() - this.getWeeksBehind();
   }
@@ -28,6 +36,19 @@ class Userdata {
     // TODO: ideas: use country, sex
       const worldConstant: number = 72.6;
       return this.yearsToWeeks(worldConstant);
+  }
+
+  /**
+   * Recalculates behind and left weeks in percents. If weeks behind is more then expect, then 100 and 0 is returned.
+   * @returns pair on numbers from 0 to 1
+   */
+  public getBehindAndLeftPercents(): Array<number> {
+    if (this.isBelowExpectThreshold()) {
+        const behindPercents = Math.floor(100 * this.getWeeksBehind() / this.getWeeksExpect());
+        return [behindPercents, 100 - behindPercents];
+    } else {
+        return [100, 0];
+    }
   }
   
   private yearsToWeeks(years: number): number {
