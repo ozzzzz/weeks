@@ -1,6 +1,5 @@
 'use client';
 
-import type { Metadata } from "next";
 import "./globals.css";
 import '@mantine/core/styles.css';
 import { Provider } from "react-redux";
