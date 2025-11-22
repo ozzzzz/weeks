@@ -33,7 +33,6 @@ const defaultBirthDate = {
 
 const defaultLifeState: LifeState = {
     profile: {
-        name: '',
         dateOfBirth: defaultBirthDate,
         realExpectancyYears: REAL_LIFE_EXPECTANCY_YEARS,
         extraExpectancyYears: EXTRA_LIFE_EXPECTANCY_YEARS,

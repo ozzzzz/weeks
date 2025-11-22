@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { PartialDate } from "./common";
 
 export interface CalendarEvent {

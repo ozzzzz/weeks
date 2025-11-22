@@ -7,13 +7,6 @@ import { Provider } from "react-redux";
 import { MantineProvider } from "@mantine/core";
 import { store } from "./store";
 
-
-
-export const metadata: Metadata = {
-  title: "Weeks - Life Calendar",
-  description: "Visualize your life in weeks",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,8 +18,8 @@ export default function RootLayout({
         className="antialiased"
       >
         <Provider store={store}>
-          <MantineProvider>
-          {children}
+          <MantineProvider defaultColorScheme="light">
+            {children}
           </MantineProvider>
         </Provider>
       </body>
