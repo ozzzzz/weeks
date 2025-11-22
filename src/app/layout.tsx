@@ -1,8 +1,11 @@
+'use client';
+
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { MantineProvider } from '@mantine/core';
 import "./globals.css";
 import '@mantine/core/styles.css';
+import { Provider } from "react-redux";
+import { MantineProvider } from "@mantine/core";
+import { store } from "./store";
 
 
 
@@ -21,9 +24,11 @@ export default function RootLayout({
       <body
         className="antialiased"
       >
-        <MantineProvider>
+        <Provider store={store}>
+          <MantineProvider>
           {children}
-        </MantineProvider>
+          </MantineProvider>
+        </Provider>
       </body>
     </html>
   );
