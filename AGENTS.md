@@ -7,7 +7,7 @@ Do do it we need 3 main things:
 
 Main features:
 - 1 week as a 1 "coin" (point / circle) on the screen
-- always show all the weeks for the whole life (up to 100 years)
+- always show all the weeks for the whole life (up to 100 years) or have the ability to zoom to see some specific period better
 - dates are fixed in the timeline, but the weeks are based on the person's date of birth and can differ for different people born on different dates
 
 Calendar features:

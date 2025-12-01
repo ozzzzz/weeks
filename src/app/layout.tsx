@@ -5,6 +5,7 @@ import '@mantine/core/styles.css';
 import { Provider } from "react-redux";
 import { MantineProvider } from "@mantine/core";
 import { store } from "./store";
+import Navigation from "./components/Navigation";
 
 export default function RootLayout({
   children,
@@ -18,7 +19,10 @@ export default function RootLayout({
       >
         <Provider store={store}>
           <MantineProvider defaultColorScheme="light">
-            {children}
+            <Navigation />
+            <main>
+              {children}
+            </main>
           </MantineProvider>
         </Provider>
       </body>
