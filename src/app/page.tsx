@@ -1,18 +1,20 @@
-import { Title, Container } from '@mantine/core';
+import { Title } from '@mantine/core';
 import LifeMenu from './components/LifeMenu';
 import WeeksVisualization from './components/WeeksVisualization';
 
 export default function Home() {
   return (
-    <Container fluid px="lg" pt="xs" pb="md">
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[300px_1fr] xl:grid-cols-[340px_1fr]">
-        <div>
+    <div className="relative h-[calc(100vh-56px)] w-full overflow-hidden">
+      <WeeksVisualization />
+
+      <div className="pointer-events-none absolute left-4 top-4 z-30 flex max-w-[90vw] flex-col gap-3">
+        <Title order={1} className="pointer-events-auto drop-shadow-sm">
+          Weeks
+        </Title>
+        <div className="pointer-events-auto w-[320px] max-w-full">
           <LifeMenu />
         </div>
-        <div>
-          <WeeksVisualization />
-        </div>
       </div>
-    </Container>
+    </div>
   );
 }
