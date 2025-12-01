@@ -1,3 +1,5 @@
+# Description
+
 This application should visualize weeks for the whole life of a person.
 
 Do do it we need 3 main things:
@@ -23,7 +25,8 @@ Visual features:
 AI features:
 - extract stuctured data from unstructured text input using an LLM agent
 
-Code features:
+## Coding requirements
+
 - use next.js with the app router
 - use typescript
 - use basic mantine components for the UI, do not overcomplicate the UI
@@ -36,3 +39,18 @@ Code features:
     - store in src/app/store.ts (slices too)
     - hooks in src/app/hooks.ts
 - use utils functions in src/app/utils as possible, do not recreate the same logic in different places
+
+## Plan
+
+- basic features:
+  - [ ] extract code with the three.js canvas into a separate component
+  - [ ] add possibility to set calendar events and periods
+
+- persistence:
+  - add possibility to save/load user data in JSON format
+  - add possibility to save in the cloud with authentication or unique link
+
+- nice to have:
+  - save expend/collapse state of the left menu in local storage
+  - save user settings (life expectancy, extra years, color theme) in local storage
+  - 
