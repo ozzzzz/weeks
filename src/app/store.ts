@@ -76,7 +76,7 @@ const defaultThemeState: ThemeState = {
 };
 
 const defaultLayoutState: LayoutState = {
-    isMenuCollapsed: false,
+    isMenuCollapsed: true,
 };
 
 const lifeSlice = createSlice({

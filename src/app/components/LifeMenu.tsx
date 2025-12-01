@@ -1,6 +1,7 @@
 'use client';
 
-import { Button, NumberInput, Paper, Stack, Text, Group, Divider } from '@mantine/core';
+import { ActionIcon, Divider, Group, NumberInput, Paper, Stack, Text, Transition } from '@mantine/core';
+import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { calculateAge } from '../utils/dates';
 import { lifeActions, layoutActions } from '../store';
 import { useAppDispatch, useAppSelector } from '../hooks';
@@ -30,75 +31,101 @@ const LifeMenu = () => {
     dispatch(layoutActions.toggleMenu());
   };
 
-  if (isMenuCollapsed) {
-    return (
-      <Paper withBorder p="md">
-        <Group justify="space-between">
-          <Text fw={600}>Life setup</Text>
-          <Button size="xs" variant="light" onClick={toggleMenu}>
-            Expand
-          </Button>
-        </Group>
-      </Paper>
-    );
-  }
-
   return (
-    <Paper withBorder p="md">
-      <Stack gap="md">
-        <Group justify="space-between">
-          <Text fw={600}>Life setup</Text>
-          <Button size="xs" variant="light" onClick={toggleMenu}>
-            Collapse
-          </Button>
-        </Group>
+    <div className="flex flex-col items-start gap-2">
+      <Transition
+        mounted={isMenuCollapsed}
+        keepMounted
+        transition="pop"
+        duration={220}
+        timingFunction="cubic-bezier(0.22, 1, 0.36, 1)"
+      >
+        {(styles) => (
+          <ActionIcon
+            style={styles}
+            size="lg"
+            variant="filled"
+            radius="xl"
+            aria-label="Expand menu"
+            onClick={toggleMenu}
+          >
+            <IconChevronDown size={18} />
+          </ActionIcon>
+        )}
+      </Transition>
 
-        <NumberInput
-          label="Birth year"
-          value={lifeProfile.dateOfBirth.year}
-          min={1900}
-          max={new Date().getFullYear()}
-          onChange={handleBirthChange('year')}
-        />
+      <Transition
+        mounted={!isMenuCollapsed}
+        keepMounted
+        transition="slide-down"
+        duration={240}
+        timingFunction="cubic-bezier(0.22, 1, 0.36, 1)"
+      >
+        {(styles) => (
+          <Paper withBorder p="md" style={styles}>
+            <Stack gap="md">
+              <Group justify="flex-start" gap="xs">
+                <ActionIcon
+                  size="lg"
+                  variant="filled"
+                  radius="xl"
+                  aria-label="Collapse menu"
+                  onClick={toggleMenu}
+                >
+                  <IconChevronUp size={18} />
+                </ActionIcon>
+                <Text fw={600}>Life setup</Text>
+              </Group>
 
-        <Group grow>
-          <NumberInput
-            label="Birth month"
-            value={lifeProfile.dateOfBirth.month}
-            min={1}
-            max={12}
-            onChange={handleBirthChange('month')}
-          />
-          <NumberInput
-            label="Birth day"
-            value={lifeProfile.dateOfBirth.day}
-            min={1}
-            max={31}
-            onChange={handleBirthChange('day')}
-          />
-        </Group>
+              <NumberInput
+                label="Birth year"
+                value={lifeProfile.dateOfBirth.year}
+                min={1900}
+                max={new Date().getFullYear()}
+                onChange={handleBirthChange('year')}
+              />
 
-        <Divider />
+              <Group grow>
+                <NumberInput
+                  label="Birth month"
+                  value={lifeProfile.dateOfBirth.month}
+                  min={1}
+                  max={12}
+                  onChange={handleBirthChange('month')}
+                />
+                <NumberInput
+                  label="Birth day"
+                  value={lifeProfile.dateOfBirth.day}
+                  min={1}
+                  max={31}
+                  onChange={handleBirthChange('day')}
+                />
+              </Group>
 
-        <NumberInput
-          label="Life expectancy (years)"
-          value={lifeProfile.realExpectancyYears}
-          min={0}
-          max={100}
-          onChange={handleRealExpectancyChange}
-        />
+              <Divider />
 
-        <NumberInput
-          label="Extra years"
-          value={lifeProfile.extraExpectancyYears}
-          min={0}
-          max={100}
-          onChange={handleExtraExpectancyChange}
-        />
+              <NumberInput
+                label="Life expectancy (years)"
+                value={lifeProfile.realExpectancyYears}
+                min={0}
+                max={100}
+                onChange={handleRealExpectancyChange}
+              />
 
-        <Text c="dimmed">Current age: {age} years</Text>
-      </Stack>
-    </Paper>
+              <NumberInput
+                label="Extra years"
+                value={lifeProfile.extraExpectancyYears}
+                min={0}
+                max={100}
+                onChange={handleExtraExpectancyChange}
+              />
+
+              <Text c="dimmed">Current age: {age} years</Text>
+            </Stack>
+          </Paper>
+        )}
+      </Transition>
+    </div>
   );
 };
 

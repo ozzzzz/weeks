@@ -37,6 +37,7 @@ const WeeksVisualization = () => {
   const planeRef = useRef(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0));
   const pointerRef = useRef(new THREE.Vector2());
   const intersectionRef = useRef(new THREE.Vector3());
+  const gridGroupRef = useRef<THREE.Group | null>(null);
   const meshRefs = useRef<Record<WeekStatus, THREE.InstancedMesh | null>>({
     lived: null,
     current: null,
@@ -45,6 +46,7 @@ const WeeksVisualization = () => {
   });
   const layoutRef = useRef<LayoutInfo | null>(null);
   const didSetInitialZoom = useRef(false);
+  const lightsRef = useRef<{ ambient: THREE.AmbientLight; directional: THREE.DirectionalLight } | null>(null);
 
   const lifeProfile = useAppSelector((state) => state.life.profile);
   const themeState = useAppSelector((state) => state.theme);
@@ -96,14 +98,35 @@ const WeeksVisualization = () => {
     rendererRef.current = renderer;
     container.appendChild(renderer.domElement);
 
+    const gridGroup = new THREE.Group();
+    gridGroupRef.current = gridGroup;
+    scene.add(gridGroup);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.85);
+    const directional = new THREE.DirectionalLight(0xffffff, 0.6);
+    directional.position.set(0.6, 0.8, 1.4);
+    scene.add(ambient);
+    scene.add(directional);
+    lightsRef.current = { ambient, directional };
+
     const camera = new THREE.OrthographicCamera(0, 0, 0, 0, -50, 50);
     camera.position.z = 10;
     cameraRef.current = camera;
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.enablePan = false;
-    controls.rotateSpeed = 0.5;
+    controls.enablePan = true;
+    controls.enableRotate = false;
+    controls.panSpeed = 0.8;
+    controls.mouseButtons = {
+      LEFT: THREE.MOUSE.PAN,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.PAN,
+    };
+    controls.touches = {
+      ONE: THREE.TOUCH.PAN,
+      TWO: THREE.TOUCH.DOLLY_PAN,
+    };
     controls.zoomSpeed = 0.7;
     controls.minZoom = 0.5;
     controls.maxZoom = 2.5;
@@ -122,11 +145,18 @@ const WeeksVisualization = () => {
     return () => {
       renderer.setAnimationLoop(null);
       controlsRef.current?.dispose();
+      if (gridGroupRef.current) {
+        scene.remove(gridGroupRef.current);
+      }
+      if (lightsRef.current) {
+        scene.remove(lightsRef.current.ambient);
+        scene.remove(lightsRef.current.directional);
+      }
       Object.values(meshRefs.current).forEach((mesh) => {
         if (!mesh) return;
         mesh.geometry.dispose();
         (mesh.material as THREE.Material).dispose();
-        scene.remove(mesh);
+        gridGroupRef.current?.remove(mesh);
       });
       renderer.dispose();
       if (renderer.domElement.parentNode === container) {
@@ -159,7 +189,7 @@ const WeeksVisualization = () => {
     camera.top = height / 2;
     camera.bottom = -height / 2;
     if (!didSetInitialZoom.current) {
-      camera.zoom = 0.92;
+      camera.zoom = 0.88;
       didSetInitialZoom.current = true;
     }
     camera.updateProjectionMatrix();
@@ -182,6 +212,7 @@ const WeeksVisualization = () => {
     const rows = Math.ceil(weeks.length / cols);
     const cellSize = bestCell;
     const radius = Math.max(1.25, (cellSize * 0.9) / 2);
+    const thickness = Math.max(0.6, radius * 0.25);
     const startX = -((cols * cellSize) / 2) + cellSize / 2;
     const startY = (rows * cellSize) / 2 - cellSize / 2;
 
@@ -216,7 +247,7 @@ const WeeksVisualization = () => {
       const offset = statusOffsets[week.status];
 
       dummy.position.set(x, y, 0);
-      dummy.scale.set(radius, radius, 1);
+      dummy.scale.set(radius, radius, thickness);
       dummy.updateMatrix();
       mesh.setMatrixAt(offset, dummy.matrix);
 
@@ -238,7 +269,7 @@ const WeeksVisualization = () => {
     statusOrder.forEach((status) => {
       const existing = meshRefs.current[status];
       if (existing) {
-        scene.remove(existing);
+        gridGroupRef.current?.remove(existing);
         existing.geometry.dispose();
         (existing.material as THREE.Material).dispose();
         meshRefs.current[status] = null;
@@ -251,7 +282,7 @@ const WeeksVisualization = () => {
       const mesh = new THREE.InstancedMesh(geometry, material, Math.max(statusCounts[status], 1));
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       meshRefs.current[status] = mesh;
-      scene.add(mesh);
+      gridGroupRef.current?.add(mesh);
     });
 
     updateLayout();
@@ -293,8 +324,13 @@ const WeeksVisualization = () => {
       return;
     }
 
-    const col = Math.floor((intersection.x - layout.startX + layout.cellSize / 2) / layout.cellSize);
-    const row = Math.floor((layout.startY - intersection.y + layout.cellSize / 2) / layout.cellSize);
+    const localPoint = intersection.clone();
+    if (gridGroupRef.current) {
+      gridGroupRef.current.worldToLocal(localPoint);
+    }
+
+    const col = Math.floor((localPoint.x - layout.startX + layout.cellSize / 2) / layout.cellSize);
+    const row = Math.floor((layout.startY - localPoint.y + layout.cellSize / 2) / layout.cellSize);
     const index = row * layout.cols + col;
 
     if (col < 0 || col >= layout.cols || row < 0 || row >= layout.rows || index >= weeks.length) {
@@ -310,7 +346,9 @@ const WeeksVisualization = () => {
     });
   };
 
-  const handlePointerLeave = () => setHoverInfo(null);
+  const handlePointerLeave = () => {
+    setHoverInfo(null);
+  };
 
   return (
     <div
