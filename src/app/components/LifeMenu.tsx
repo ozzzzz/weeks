@@ -1,10 +1,11 @@
 'use client';
 
-import { ActionIcon, Divider, Group, NumberInput, Paper, Stack, Text, Transition } from '@mantine/core';
-import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
+import { ActionIcon, Divider, Group, NumberInput, Paper, Stack, Tabs, Text, Transition } from '@mantine/core';
+import { IconChevronDown, IconChevronUp, IconUser, IconCalendar } from '@tabler/icons-react';
 import { calculateAge } from '../utils/dates';
 import { lifeActions, layoutActions } from '../store';
 import { useAppDispatch, useAppSelector } from '../hooks';
+import CalendarList from './CalendarList';
 
 const LifeMenu = () => {
   const dispatch = useAppDispatch();
@@ -77,50 +78,69 @@ const LifeMenu = () => {
                 <Text fw={600}>Life setup</Text>
               </Group>
 
-              <NumberInput
-                label="Birth year"
-                value={lifeProfile.dateOfBirth.year}
-                min={1900}
-                max={new Date().getFullYear()}
-                onChange={handleBirthChange('year')}
-              />
+              <Tabs defaultValue="profile">
+                <Tabs.List>
+                  <Tabs.Tab value="profile" leftSection={<IconUser size={14} />}>
+                    Profile
+                  </Tabs.Tab>
+                  <Tabs.Tab value="calendars" leftSection={<IconCalendar size={14} />}>
+                    Calendars
+                  </Tabs.Tab>
+                </Tabs.List>
 
-              <Group grow>
-                <NumberInput
-                  label="Birth month"
-                  value={lifeProfile.dateOfBirth.month}
-                  min={1}
-                  max={12}
-                  onChange={handleBirthChange('month')}
-                />
-                <NumberInput
-                  label="Birth day"
-                  value={lifeProfile.dateOfBirth.day}
-                  min={1}
-                  max={31}
-                  onChange={handleBirthChange('day')}
-                />
-              </Group>
+                <Tabs.Panel value="profile" pt="md">
+                  <Stack gap="md">
+                    <NumberInput
+                      label="Birth year"
+                      value={lifeProfile.dateOfBirth.year}
+                      min={1900}
+                      max={new Date().getFullYear()}
+                      onChange={handleBirthChange('year')}
+                    />
 
-              <Divider />
+                    <Group grow>
+                      <NumberInput
+                        label="Birth month"
+                        value={lifeProfile.dateOfBirth.month}
+                        min={1}
+                        max={12}
+                        onChange={handleBirthChange('month')}
+                      />
+                      <NumberInput
+                        label="Birth day"
+                        value={lifeProfile.dateOfBirth.day}
+                        min={1}
+                        max={31}
+                        onChange={handleBirthChange('day')}
+                      />
+                    </Group>
 
-              <NumberInput
-                label="Life expectancy (years)"
-                value={lifeProfile.realExpectancyYears}
-                min={0}
-                max={100}
-                onChange={handleRealExpectancyChange}
-              />
+                    <Divider />
 
-              <NumberInput
-                label="Extra years"
-                value={lifeProfile.extraExpectancyYears}
-                min={0}
-                max={100}
-                onChange={handleExtraExpectancyChange}
-              />
+                    <NumberInput
+                      label="Life expectancy (years)"
+                      value={lifeProfile.realExpectancyYears}
+                      min={0}
+                      max={100}
+                      onChange={handleRealExpectancyChange}
+                    />
 
-              <Text c="dimmed">Current age: {age} years</Text>
+                    <NumberInput
+                      label="Extra years"
+                      value={lifeProfile.extraExpectancyYears}
+                      min={0}
+                      max={100}
+                      onChange={handleExtraExpectancyChange}
+                    />
+
+                    <Text c="dimmed">Current age: {age} years</Text>
+                  </Stack>
+                </Tabs.Panel>
+
+                <Tabs.Panel value="calendars" pt="md">
+                  <CalendarList />
+                </Tabs.Panel>
+              </Tabs>
             </Stack>
           </Paper>
         )}
