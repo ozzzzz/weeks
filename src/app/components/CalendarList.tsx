@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ActionIcon, Button, Group, Stack, Text, TextInput } from '@mantine/core';
+import { Accordion, ActionIcon, Button, Group, Stack, Text, TextInput } from '@mantine/core';
 import { IconPlus, IconTrash, IconEdit, IconCheck, IconX } from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { calendarActions } from '../store';
 import { Calendar } from '../types';
+import CalendarDetail from './CalendarDetail';
 
 const CalendarList = () => {
   const dispatch = useAppDispatch();
@@ -25,16 +26,19 @@ const CalendarList = () => {
     setEditingName(newCalendar.name);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     dispatch(calendarActions.removeCalendar(id));
   };
 
-  const handleStartEdit = (calendar: Calendar) => {
+  const handleStartEdit = (calendar: Calendar, e: React.MouseEvent) => {
+    e.stopPropagation();
     setEditingId(calendar.id);
     setEditingName(calendar.name);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!editingId || !editingName.trim()) return;
 
     const calendar = calendars.find((c) => c.id === editingId);
@@ -48,7 +52,8 @@ const CalendarList = () => {
     setEditingName('');
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setEditingId(null);
     setEditingName('');
   };
@@ -66,67 +71,77 @@ const CalendarList = () => {
       {calendars.length === 0 ? (
         <Text c="dimmed" size="sm">No calendars yet</Text>
       ) : (
-        calendars.map((calendar) => (
-          <Group key={calendar.id} justify="space-between" wrap="nowrap">
-            {editingId === calendar.id ? (
-              <TextInput
-                value={editingName}
-                onChange={(e) => setEditingName(e.target.value)}
-                onKeyDown={handleKeyDown}
-                size="sm"
-                style={{ flex: 1 }}
-                autoFocus
-              />
-            ) : (
-              <Text size="sm" style={{ flex: 1 }}>{calendar.name}</Text>
-            )}
+        <Accordion variant="separated" radius="sm">
+          {calendars.map((calendar) => (
+            <Accordion.Item key={calendar.id} value={calendar.id}>
+              <Accordion.Control>
+                <Group justify="space-between" wrap="nowrap" style={{ flex: 1 }}>
+                  {editingId === calendar.id ? (
+                    <TextInput
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onClick={(e) => e.stopPropagation()}
+                      size="xs"
+                      style={{ flex: 1 }}
+                      autoFocus
+                    />
+                  ) : (
+                    <Text size="sm">{calendar.name}</Text>
+                  )}
 
-            <Group gap="xs" wrap="nowrap">
-              {editingId === calendar.id ? (
-                <>
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color="green"
-                    onClick={handleSaveEdit}
-                    aria-label="Save"
-                  >
-                    <IconCheck size={14} />
-                  </ActionIcon>
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color="gray"
-                    onClick={handleCancelEdit}
-                    aria-label="Cancel"
-                  >
-                    <IconX size={14} />
-                  </ActionIcon>
-                </>
-              ) : (
-                <>
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    onClick={() => handleStartEdit(calendar)}
-                    aria-label="Edit calendar"
-                  >
-                    <IconEdit size={14} />
-                  </ActionIcon>
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color="red"
-                    onClick={() => handleDelete(calendar.id)}
-                    aria-label="Delete calendar"
-                  >
-                    <IconTrash size={14} />
-                  </ActionIcon>
-                </>
-              )}
-            </Group>
-          </Group>
-        ))
+                  <Group gap="xs" wrap="nowrap" onClick={(e) => e.stopPropagation()}>
+                    {editingId === calendar.id ? (
+                      <>
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          color="green"
+                          onClick={handleSaveEdit}
+                          aria-label="Save"
+                        >
+                          <IconCheck size={14} />
+                        </ActionIcon>
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          color="gray"
+                          onClick={handleCancelEdit}
+                          aria-label="Cancel"
+                        >
+                          <IconX size={14} />
+                        </ActionIcon>
+                      </>
+                    ) : (
+                      <>
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          onClick={(e) => handleStartEdit(calendar, e)}
+                          aria-label="Edit calendar"
+                        >
+                          <IconEdit size={14} />
+                        </ActionIcon>
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          color="red"
+                          onClick={(e) => handleDelete(calendar.id, e)}
+                          aria-label="Delete calendar"
+                        >
+                          <IconTrash size={14} />
+                        </ActionIcon>
+                      </>
+                    )}
+                  </Group>
+                </Group>
+              </Accordion.Control>
+              <Accordion.Panel>
+                <CalendarDetail calendar={calendar} />
+              </Accordion.Panel>
+            </Accordion.Item>
+          ))}
+        </Accordion>
       )}
 
       <Button

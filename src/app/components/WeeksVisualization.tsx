@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Badge, Group, Paper, Text } from '@mantine/core';
 import { useAppSelector } from '../hooks';
 import { buildWeekPoints } from '../utils/weeks';
+import { buildWeekOverlays } from '../utils/calendar';
 import { formatDisplayDate } from '../utils/dates';
 import { WeekStatus } from '../types';
 
@@ -23,9 +24,14 @@ type HoverInfo = {
   clientX: number;
   clientY: number;
   label: string;
+  events?: string[];
+  periods?: string[];
 };
 
 const statusOrder: WeekStatus[] = ['lived', 'current', 'remaining', 'extra'];
+
+const DEFAULT_EVENT_COLOR = '#ef4444';
+const DEFAULT_PERIOD_COLOR = '#3b82f6';
 
 const WeeksVisualization = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -44,15 +50,33 @@ const WeeksVisualization = () => {
     remaining: null,
     extra: null,
   });
+  const eventMeshRef = useRef<THREE.InstancedMesh | null>(null);
+  const periodMeshRef = useRef<THREE.InstancedMesh | null>(null);
   const layoutRef = useRef<LayoutInfo | null>(null);
   const didSetInitialZoom = useRef(false);
   const lightsRef = useRef<{ ambient: THREE.AmbientLight; directional: THREE.DirectionalLight } | null>(null);
 
   const lifeProfile = useAppSelector((state) => state.life.profile);
+  const calendars = useAppSelector((state) => state.calendar.calendars);
   const themeState = useAppSelector((state) => state.theme);
   const activeTheme = themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ?? themeState.themes[0];
 
   const weeks = useMemo(() => buildWeekPoints(lifeProfile), [lifeProfile]);
+
+  const weekOverlays = useMemo(
+    () => buildWeekOverlays(weeks.length, calendars, lifeProfile.dateOfBirth),
+    [weeks.length, calendars, lifeProfile.dateOfBirth]
+  );
+
+  const overlayStats = useMemo(() => {
+    let eventCount = 0;
+    let periodWeekCount = 0;
+    weekOverlays.forEach((overlay) => {
+      eventCount += overlay.events.length;
+      if (overlay.periods.length > 0) periodWeekCount += 1;
+    });
+    return { eventCount, periodWeekCount };
+  }, [weekOverlays]);
 
   const statusCounts = useMemo(
     () =>
@@ -158,6 +182,14 @@ const WeeksVisualization = () => {
         (mesh.material as THREE.Material).dispose();
         gridGroupRef.current?.remove(mesh);
       });
+      if (eventMeshRef.current) {
+        eventMeshRef.current.geometry.dispose();
+        (eventMeshRef.current.material as THREE.Material).dispose();
+      }
+      if (periodMeshRef.current) {
+        periodMeshRef.current.geometry.dispose();
+        (periodMeshRef.current.material as THREE.Material).dispose();
+      }
       renderer.dispose();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
@@ -234,6 +266,7 @@ const WeeksVisualization = () => {
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     });
 
+    // Position week circles
     for (let index = 0; index < weeks.length; index += 1) {
       const col = index % cols;
       const row = Math.floor(index / cols);
@@ -259,13 +292,77 @@ const WeeksVisualization = () => {
       if (!mesh) return;
       mesh.instanceMatrix.needsUpdate = true;
     });
+
+    // Position event dots
+    const eventMesh = eventMeshRef.current;
+    if (eventMesh) {
+      let eventIndex = 0;
+      const eventDotRadius = radius * 0.3;
+
+      for (let weekIndex = 0; weekIndex < weeks.length; weekIndex += 1) {
+        const overlay = weekOverlays.get(weekIndex);
+        if (!overlay || overlay.events.length === 0) continue;
+
+        const col = weekIndex % cols;
+        const row = Math.floor(weekIndex / cols);
+        const x = startX + col * cellSize;
+        const y = startY - row * cellSize;
+
+        dummy.position.set(x, y, 0.1);
+        dummy.scale.set(eventDotRadius, eventDotRadius, 1);
+        dummy.updateMatrix();
+        eventMesh.setMatrixAt(eventIndex, dummy.matrix);
+
+        // Set color from first event
+        const color = new THREE.Color(overlay.events[0].color ?? DEFAULT_EVENT_COLOR);
+        eventMesh.setColorAt(eventIndex, color);
+
+        eventIndex += 1;
+      }
+      eventMesh.count = eventIndex;
+      eventMesh.instanceMatrix.needsUpdate = true;
+      if (eventMesh.instanceColor) eventMesh.instanceColor.needsUpdate = true;
+    }
+
+    // Position period rings
+    const periodMesh = periodMeshRef.current;
+    if (periodMesh) {
+      let periodIndex = 0;
+      const ringScale = radius * 1.15;
+
+      for (let weekIndex = 0; weekIndex < weeks.length; weekIndex += 1) {
+        const overlay = weekOverlays.get(weekIndex);
+        if (!overlay || overlay.periods.length === 0) continue;
+
+        const col = weekIndex % cols;
+        const row = Math.floor(weekIndex / cols);
+        const x = startX + col * cellSize;
+        const y = startY - row * cellSize;
+
+        dummy.position.set(x, y, 0.05);
+        dummy.scale.set(ringScale, ringScale, 1);
+        dummy.updateMatrix();
+        periodMesh.setMatrixAt(periodIndex, dummy.matrix);
+
+        // Set color from first period
+        const color = new THREE.Color(overlay.periods[0].color ?? DEFAULT_PERIOD_COLOR);
+        periodMesh.setColorAt(periodIndex, color);
+
+        periodIndex += 1;
+      }
+      periodMesh.count = periodIndex;
+      periodMesh.instanceMatrix.needsUpdate = true;
+      if (periodMesh.instanceColor) periodMesh.instanceColor.needsUpdate = true;
+    }
+
     controlsRef.current?.update();
-  }, [weeks, statusCounts]);
+  }, [weeks, statusCounts, weekOverlays]);
 
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene || !rendererRef.current) return;
 
+    // Clean up existing week meshes
     statusOrder.forEach((status) => {
       const existing = meshRefs.current[status];
       if (existing) {
@@ -276,6 +373,7 @@ const WeeksVisualization = () => {
       }
     });
 
+    // Create week meshes
     statusOrder.forEach((status) => {
       const geometry = new THREE.CircleGeometry(1, 24);
       const material = new THREE.MeshBasicMaterial({ color: colorMap[status] });
@@ -285,8 +383,42 @@ const WeeksVisualization = () => {
       gridGroupRef.current?.add(mesh);
     });
 
+    // Clean up existing overlay meshes
+    if (eventMeshRef.current) {
+      gridGroupRef.current?.remove(eventMeshRef.current);
+      eventMeshRef.current.geometry.dispose();
+      (eventMeshRef.current.material as THREE.Material).dispose();
+      eventMeshRef.current = null;
+    }
+    if (periodMeshRef.current) {
+      gridGroupRef.current?.remove(periodMeshRef.current);
+      periodMeshRef.current.geometry.dispose();
+      (periodMeshRef.current.material as THREE.Material).dispose();
+      periodMeshRef.current = null;
+    }
+
+    // Create event dot mesh (small circles)
+    const maxEvents = Math.max(overlayStats.eventCount, 1);
+    const eventGeometry = new THREE.CircleGeometry(1, 16);
+    const eventMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
+    const eventMesh = new THREE.InstancedMesh(eventGeometry, eventMaterial, maxEvents);
+    eventMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    eventMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(maxEvents * 3), 3);
+    eventMeshRef.current = eventMesh;
+    gridGroupRef.current?.add(eventMesh);
+
+    // Create period ring mesh
+    const maxPeriodWeeks = Math.max(overlayStats.periodWeekCount, 1);
+    const ringGeometry = new THREE.RingGeometry(0.8, 1, 24);
+    const ringMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
+    const periodMesh = new THREE.InstancedMesh(ringGeometry, ringMaterial, maxPeriodWeeks);
+    periodMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    periodMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(maxPeriodWeeks * 3), 3);
+    periodMeshRef.current = periodMesh;
+    gridGroupRef.current?.add(periodMesh);
+
     updateLayout();
-  }, [colorMap, statusCounts, updateLayout]);
+  }, [colorMap, statusCounts, overlayStats, updateLayout]);
 
   useEffect(() => {
     const handleResize = () => updateLayout();
@@ -339,10 +471,14 @@ const WeeksVisualization = () => {
     }
 
     const week = weeks[index];
+    const overlay = weekOverlays.get(index);
+
     setHoverInfo({
       clientX: event.clientX,
       clientY: event.clientY,
       label: `${formatDisplayDate(week.date)} · ${week.status}`,
+      events: overlay?.events.map((e) => e.label),
+      periods: overlay?.periods.map((p) => p.label),
     });
   };
 
@@ -377,7 +513,21 @@ const WeeksVisualization = () => {
           className="pointer-events-none fixed z-30 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs shadow-md"
           style={{ left: hoverInfo.clientX + 10, top: hoverInfo.clientY + 10 }}
         >
-          {hoverInfo.label}
+          <div>{hoverInfo.label}</div>
+          {hoverInfo.events && hoverInfo.events.length > 0 && (
+            <div className="mt-1 text-red-600">
+              {hoverInfo.events.map((e, i) => (
+                <div key={i}>Event: {e}</div>
+              ))}
+            </div>
+          )}
+          {hoverInfo.periods && hoverInfo.periods.length > 0 && (
+            <div className="mt-1 text-blue-600">
+              {hoverInfo.periods.map((p, i) => (
+                <div key={i}>Period: {p}</div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
