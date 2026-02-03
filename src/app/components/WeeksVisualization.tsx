@@ -357,11 +357,12 @@ const WeeksVisualization = () => {
       if (eventMesh.instanceColor) eventMesh.instanceColor.needsUpdate = true;
     }
 
-    // Position period outlines per period (color-locked materials)
+    // Position period backgrounds per period (color-locked materials)
     periodMeshesRef.current.forEach((mesh, index) => {
       const instance = periodInstances[index];
       if (!instance) return;
-      const outlineScale = radius * 1.2;
+      const bgWidth = cellSize;
+      const bgHeight = cellSize;
 
       instance.weekIndices.forEach((weekIndex, weekOffset) => {
         const col = weekIndex % cols;
@@ -369,8 +370,8 @@ const WeeksVisualization = () => {
         const x = startX + col * cellSize;
         const y = startY - row * cellSize;
 
-        dummy.position.set(x, y, 0.03);
-        dummy.scale.set(outlineScale, outlineScale, 1);
+        dummy.position.set(x, y, -0.08);
+        dummy.scale.set(bgWidth, bgHeight, 1);
         dummy.updateMatrix();
         mesh.setMatrixAt(weekOffset, dummy.matrix);
       });
@@ -431,22 +432,26 @@ const WeeksVisualization = () => {
     eventMeshRef.current = eventMesh;
     gridGroupRef.current?.add(eventMesh);
 
-    // Create period outline meshes, one per period to lock in color
+    // Create period background meshes, one per period to lock in color
+    const backgroundColor = new THREE.Color(activeTheme?.background ?? '#f8fafc');
+
     periodInstances.forEach((instance) => {
-      const ringGeometry = new THREE.RingGeometry(0.7, 1, 32);
-      const color = new THREE.Color(instance.period.color ?? DEFAULT_PERIOD_COLOR);
-      const ringMaterial = new THREE.MeshBasicMaterial({
-        color,
-        transparent: true,
-        opacity: 0.9,
+      const planeGeometry = new THREE.PlaneGeometry(1, 1);
+      const baseColor = new THREE.Color(instance.period.color ?? DEFAULT_PERIOD_COLOR);
+      const tintColor = baseColor.clone().lerp(backgroundColor, 0.7);
+      const planeMaterial = new THREE.MeshBasicMaterial({
+        color: tintColor,
+        transparent: false,
         side: THREE.DoubleSide,
+        depthWrite: false,
       });
       const mesh = new THREE.InstancedMesh(
-        ringGeometry,
-        ringMaterial,
+        planeGeometry,
+        planeMaterial,
         Math.max(instance.weekIndices.length, 1),
       );
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      mesh.renderOrder = -1;
       periodMeshesRef.current.push(mesh);
       gridGroupRef.current?.add(mesh);
     });
