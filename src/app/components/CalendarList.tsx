@@ -11,8 +11,16 @@ import CalendarDetail from './CalendarDetail';
 const CalendarList = () => {
   const dispatch = useAppDispatch();
   const calendars = useAppSelector((state) => state.calendar.calendars);
+  const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+
+  const handleKeyActivate = (action: () => void) => (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      action();
+    }
+  };
 
   const handleCreate = () => {
     const newCalendar: Calendar = {
@@ -22,17 +30,18 @@ const CalendarList = () => {
       periods: [],
     };
     dispatch(calendarActions.upsertCalendar(newCalendar));
+    dispatch(calendarActions.setActiveCalendar(newCalendar.id));
     setEditingId(newCalendar.id);
     setEditingName(newCalendar.name);
   };
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDelete = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     dispatch(calendarActions.removeCalendar(id));
   };
 
-  const handleStartEdit = (calendar: Calendar, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleStartEdit = (calendar: Calendar, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setEditingId(calendar.id);
     setEditingName(calendar.name);
   };
@@ -58,6 +67,10 @@ const CalendarList = () => {
     setEditingName('');
   };
 
+  const handleSelectCalendar = (calendarId: string) => {
+    dispatch(calendarActions.setActiveCalendar(calendarId));
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSaveEdit();
@@ -76,19 +89,29 @@ const CalendarList = () => {
             <Accordion.Item key={calendar.id} value={calendar.id}>
               <Accordion.Control>
                 <Group justify="space-between" wrap="nowrap" style={{ flex: 1 }}>
-                  {editingId === calendar.id ? (
-                    <TextInput
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      onKeyDown={handleKeyDown}
+                  <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
+                    <input
+                      type="radio"
+                      name="activeCalendar"
+                      checked={activeCalendarId === calendar.id}
+                      onChange={() => handleSelectCalendar(calendar.id)}
                       onClick={(e) => e.stopPropagation()}
-                      size="xs"
-                      style={{ flex: 1 }}
-                      autoFocus
+                      aria-label={`Select ${calendar.name}`}
                     />
-                  ) : (
-                    <Text size="sm">{calendar.name}</Text>
-                  )}
+                    {editingId === calendar.id ? (
+                      <TextInput
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        onClick={(e) => e.stopPropagation()}
+                        size="xs"
+                        style={{ flex: 1 }}
+                        autoFocus
+                      />
+                    ) : (
+                      <Text size="sm">{calendar.name}</Text>
+                    )}
+                  </Group>
 
                   <Group gap="xs" wrap="nowrap" onClick={(e) => e.stopPropagation()}>
                     {editingId === calendar.id ? (
@@ -97,7 +120,11 @@ const CalendarList = () => {
                           size="sm"
                           variant="subtle"
                           color="green"
+                          component="span"
+                          role="button"
+                          tabIndex={0}
                           onClick={handleSaveEdit}
+                          onKeyDown={handleKeyActivate(() => handleSaveEdit())}
                           aria-label="Save"
                         >
                           <IconCheck size={14} />
@@ -106,7 +133,11 @@ const CalendarList = () => {
                           size="sm"
                           variant="subtle"
                           color="gray"
+                          component="span"
+                          role="button"
+                          tabIndex={0}
                           onClick={handleCancelEdit}
+                          onKeyDown={handleKeyActivate(() => handleCancelEdit())}
                           aria-label="Cancel"
                         >
                           <IconX size={14} />
@@ -117,7 +148,11 @@ const CalendarList = () => {
                         <ActionIcon
                           size="sm"
                           variant="subtle"
+                          component="span"
+                          role="button"
+                          tabIndex={0}
                           onClick={(e) => handleStartEdit(calendar, e)}
+                          onKeyDown={handleKeyActivate(() => handleStartEdit(calendar))}
                           aria-label="Edit calendar"
                         >
                           <IconEdit size={14} />
@@ -126,7 +161,11 @@ const CalendarList = () => {
                           size="sm"
                           variant="subtle"
                           color="red"
+                          component="span"
+                          role="button"
+                          tabIndex={0}
                           onClick={(e) => handleDelete(calendar.id, e)}
+                          onKeyDown={handleKeyActivate(() => handleDelete(calendar.id))}
                           aria-label="Delete calendar"
                         >
                           <IconTrash size={14} />

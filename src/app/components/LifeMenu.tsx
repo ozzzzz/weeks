@@ -1,17 +1,47 @@
 'use client';
 
-import { ActionIcon, Divider, Group, NumberInput, Paper, Stack, Tabs, Text, Transition } from '@mantine/core';
+import { useMemo } from 'react';
+import { ActionIcon, Button, Divider, Group, NumberInput, Paper, Stack, Tabs, Text, Transition } from '@mantine/core';
 import { IconChevronDown, IconChevronUp, IconUser, IconCalendar } from '@tabler/icons-react';
 import { calculateAge } from '../utils/dates';
-import { lifeActions, layoutActions } from '../store';
+import { buildWeekOverlays } from '../utils/calendar';
+import { buildWeekPoints } from '../utils/weeks';
+import { buildDemoState } from '../utils/demoData';
+import { calendarActions, lifeActions, layoutActions } from '../store';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import CalendarList from './CalendarList';
 
 const LifeMenu = () => {
   const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
+  const calendars = useAppSelector((state) => state.calendar.calendars);
   const isMenuCollapsed = useAppSelector((state) => state.layout.isMenuCollapsed);
   const age = calculateAge(lifeProfile.dateOfBirth);
+
+  const weeks = useMemo(() => buildWeekPoints(lifeProfile), [lifeProfile]);
+  const overlays = useMemo(
+    () => buildWeekOverlays(weeks.length, calendars, lifeProfile.dateOfBirth),
+    [weeks.length, calendars, lifeProfile.dateOfBirth],
+  );
+
+  const diagnostics = useMemo(() => {
+    let eventsInRange = 0;
+    let weeksWithPeriods = 0;
+
+    overlays.forEach((overlay) => {
+      eventsInRange += overlay.events.length;
+      if (overlay.periods.length > 0) weeksWithPeriods += 1;
+    });
+
+    const hasCurrentWeek = weeks.some((week) => week.status === 'current');
+
+    return {
+      totalWeeks: weeks.length,
+      eventsInRange,
+      weeksWithPeriods,
+      hasCurrentWeek,
+    };
+  }, [overlays, weeks]);
 
   const handleBirthChange = (field: 'year' | 'month' | 'day') => (value: string | number) => {
     if (typeof value !== 'number') return;
@@ -30,6 +60,18 @@ const LifeMenu = () => {
 
   const toggleMenu = () => {
     dispatch(layoutActions.toggleMenu());
+  };
+
+  const handleLoadDemo = () => {
+    const demo = buildDemoState();
+    dispatch(lifeActions.setLifeProfile(demo.profile));
+    dispatch(calendarActions.setCalendars(demo.calendars));
+    dispatch(calendarActions.setActiveCalendar(demo.activeCalendarId ?? null));
+    dispatch(layoutActions.setMenuCollapsed(false));
+  };
+
+  const handleClearCalendars = () => {
+    dispatch(calendarActions.setCalendars([]));
   };
 
   return (
@@ -134,11 +176,42 @@ const LifeMenu = () => {
                     />
 
                     <Text c="dimmed">Current age: {age} years</Text>
+
+                    <Divider />
+
+                    <Stack gap={4}>
+                      <Text fw={600}>Status check</Text>
+                      <Text size="sm" c={diagnostics.totalWeeks > 0 && diagnostics.hasCurrentWeek ? 'green' : 'red'}>
+                        {diagnostics.totalWeeks > 0 && diagnostics.hasCurrentWeek
+                          ? 'OK — weeks calculated'
+                          : 'Check inputs — no valid weeks'}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        Weeks: {diagnostics.totalWeeks} · Events in range: {diagnostics.eventsInRange} · Weeks with periods: {diagnostics.weeksWithPeriods}
+                      </Text>
+                    </Stack>
                   </Stack>
                 </Tabs.Panel>
 
                 <Tabs.Panel value="calendars" pt="md">
-                  <CalendarList />
+                  <Stack gap="md">
+                    <CalendarList />
+                    <Divider />
+                    <Stack gap="xs">
+                      <Text fw={600}>Demo data</Text>
+                      <Text size="xs" c="dimmed">
+                        Loads a full set of sample events and periods covering edge cases.
+                      </Text>
+                      <Group gap="xs">
+                        <Button size="xs" variant="light" onClick={handleLoadDemo}>
+                          Load demo data
+                        </Button>
+                        <Button size="xs" variant="subtle" color="red" onClick={handleClearCalendars}>
+                          Clear calendars
+                        </Button>
+                      </Group>
+                    </Stack>
+                  </Stack>
                 </Tabs.Panel>
               </Tabs>
             </Stack>

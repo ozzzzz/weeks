@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button, ColorInput, Group, NumberInput, SegmentedControl, Stack, Text, TextInput } from '@mantine/core';
 import { CalendarPeriod } from '../types';
 import { PartialDate } from '../types/common';
+import { partialDateToDate } from '../utils/dates';
 
 interface PeriodFormProps {
   calendarId: string;
@@ -19,19 +20,29 @@ const PeriodForm = ({ calendarId, period, onSave, onCancel }: PeriodFormProps) =
   const [end, setEnd] = useState<PartialDate>(period?.end ?? { year: currentYear });
   const [color, setColor] = useState(period?.color ?? '');
   const [pattern, setPattern] = useState<'solid' | 'striped'>(period?.pattern ?? 'solid');
+  const [error, setError] = useState('');
 
   const handleStartChange = (field: 'year' | 'month' | 'day') => (value: string | number) => {
     if (typeof value !== 'number') return;
+    setError('');
     setStart((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleEndChange = (field: 'year' | 'month' | 'day') => (value: string | number) => {
     if (typeof value !== 'number') return;
+    setError('');
     setEnd((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
     if (!label.trim() || !start.year || !end.year) return;
+
+    const startDate = partialDateToDate(start);
+    const endDate = partialDateToDate(end);
+    if (endDate < startDate) {
+      setError('End date must be on or after the start date.');
+      return;
+    }
 
     const newPeriod: CalendarPeriod = {
       id: period?.id ?? crypto.randomUUID(),
@@ -125,9 +136,15 @@ const PeriodForm = ({ calendarId, period, onSave, onCancel }: PeriodFormProps) =
           data={[
             { label: 'Solid', value: 'solid' },
             { label: 'Striped', value: 'striped' },
-          ]}
-        />
+      ]}
+    />
       </Stack>
+
+      {error && (
+        <Text size="xs" c="red">
+          {error}
+        </Text>
+      )}
 
       <Group justify="flex-end" mt="sm">
         <Button variant="subtle" onClick={onCancel}>

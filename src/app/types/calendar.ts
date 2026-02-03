@@ -23,4 +23,5 @@ export interface Calendar {
   name: string;
   events: CalendarEvent[];
   periods: CalendarPeriod[];
+  isVisible?: boolean;
 }

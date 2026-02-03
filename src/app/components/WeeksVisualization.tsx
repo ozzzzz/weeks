@@ -6,8 +6,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Badge, Group, Paper, Text } from '@mantine/core';
 import { useAppSelector } from '../hooks';
 import { buildWeekPoints } from '../utils/weeks';
-import { buildWeekOverlays } from '../utils/calendar';
-import { formatDisplayDate } from '../utils/dates';
+import { buildWeekOverlays, dateToWeekIndex } from '../utils/calendar';
+import { formatDisplayDate, formatPartialDate } from '../utils/dates';
 import { WeekStatus } from '../types';
 
 type LayoutInfo = {
@@ -51,31 +51,62 @@ const WeeksVisualization = () => {
     extra: null,
   });
   const eventMeshRef = useRef<THREE.InstancedMesh | null>(null);
-  const periodMeshRef = useRef<THREE.InstancedMesh | null>(null);
+  const periodMeshesRef = useRef<THREE.InstancedMesh[]>([]);
   const layoutRef = useRef<LayoutInfo | null>(null);
   const didSetInitialZoom = useRef(false);
   const lightsRef = useRef<{ ambient: THREE.AmbientLight; directional: THREE.DirectionalLight } | null>(null);
 
   const lifeProfile = useAppSelector((state) => state.life.profile);
   const calendars = useAppSelector((state) => state.calendar.calendars);
+  const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
   const themeState = useAppSelector((state) => state.theme);
   const activeTheme = themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ?? themeState.themes[0];
 
   const weeks = useMemo(() => buildWeekPoints(lifeProfile), [lifeProfile]);
 
+  const activeCalendars = useMemo(() => {
+    if (!activeCalendarId) return calendars;
+    return calendars.filter((calendar) => calendar.id === activeCalendarId);
+  }, [calendars, activeCalendarId]);
+
   const weekOverlays = useMemo(
-    () => buildWeekOverlays(weeks.length, calendars, lifeProfile.dateOfBirth),
-    [weeks.length, calendars, lifeProfile.dateOfBirth]
+    () => buildWeekOverlays(weeks.length, activeCalendars, lifeProfile.dateOfBirth),
+    [weeks.length, activeCalendars, lifeProfile.dateOfBirth]
   );
+
+  const periodInstances = useMemo(() => {
+    const totalWeeks = weeks.length;
+    if (totalWeeks === 0) return [];
+
+    return activeCalendars.flatMap((calendar) =>
+      calendar.periods
+        .map((period) => {
+          const startWeek = dateToWeekIndex(period.start, lifeProfile.dateOfBirth);
+          const endWeek = dateToWeekIndex(period.end, lifeProfile.dateOfBirth);
+          const start = Math.max(0, Math.min(totalWeeks - 1, startWeek));
+          const end = Math.max(0, Math.min(totalWeeks - 1, endWeek));
+
+          if (end < 0 || start > totalWeeks - 1 || end < start) {
+            return null;
+          }
+
+          const weekIndices: number[] = [];
+          for (let i = start; i <= end; i += 1) {
+            weekIndices.push(i);
+          }
+
+          return { period, weekIndices };
+        })
+        .filter((entry): entry is { period: (typeof calendar.periods)[number]; weekIndices: number[] } => !!entry),
+    );
+  }, [activeCalendars, lifeProfile.dateOfBirth, weeks.length]);
 
   const overlayStats = useMemo(() => {
     let eventCount = 0;
-    let periodWeekCount = 0;
     weekOverlays.forEach((overlay) => {
       eventCount += overlay.events.length;
-      if (overlay.periods.length > 0) periodWeekCount += 1;
     });
-    return { eventCount, periodWeekCount };
+    return { eventCount };
   }, [weekOverlays]);
 
   const statusCounts = useMemo(
@@ -186,10 +217,12 @@ const WeeksVisualization = () => {
         eventMeshRef.current.geometry.dispose();
         (eventMeshRef.current.material as THREE.Material).dispose();
       }
-      if (periodMeshRef.current) {
-        periodMeshRef.current.geometry.dispose();
-        (periodMeshRef.current.material as THREE.Material).dispose();
-      }
+      periodMeshesRef.current.forEach((mesh) => {
+        mesh.geometry.dispose();
+        (mesh.material as THREE.Material).dispose();
+        gridGroupRef.current?.remove(mesh);
+      });
+      periodMeshesRef.current = [];
       renderer.dispose();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
@@ -243,8 +276,8 @@ const WeeksVisualization = () => {
     const cols = bestCols;
     const rows = Math.ceil(weeks.length / cols);
     const cellSize = bestCell;
-    const radius = Math.max(1.25, (cellSize * 0.9) / 2);
-    const thickness = Math.max(0.6, radius * 0.25);
+    const radius = Math.max(1.2, (cellSize * 0.65) / 2);
+    const thickness = Math.max(0.6, radius * 0.3);
     const startX = -((cols * cellSize) / 2) + cellSize / 2;
     const startY = (rows * cellSize) / 2 - cellSize / 2;
 
@@ -297,7 +330,7 @@ const WeeksVisualization = () => {
     const eventMesh = eventMeshRef.current;
     if (eventMesh) {
       let eventIndex = 0;
-      const eventDotRadius = radius * 0.3;
+      const eventDotRadius = radius * 0.55;
 
       for (let weekIndex = 0; weekIndex < weeks.length; weekIndex += 1) {
         const overlay = weekOverlays.get(weekIndex);
@@ -308,7 +341,7 @@ const WeeksVisualization = () => {
         const x = startX + col * cellSize;
         const y = startY - row * cellSize;
 
-        dummy.position.set(x, y, 0.1);
+        dummy.position.set(x, y, 0.12);
         dummy.scale.set(eventDotRadius, eventDotRadius, 1);
         dummy.updateMatrix();
         eventMesh.setMatrixAt(eventIndex, dummy.matrix);
@@ -324,36 +357,27 @@ const WeeksVisualization = () => {
       if (eventMesh.instanceColor) eventMesh.instanceColor.needsUpdate = true;
     }
 
-    // Position period rings
-    const periodMesh = periodMeshRef.current;
-    if (periodMesh) {
-      let periodIndex = 0;
-      const ringScale = radius * 1.15;
+    // Position period outlines per period (color-locked materials)
+    periodMeshesRef.current.forEach((mesh, index) => {
+      const instance = periodInstances[index];
+      if (!instance) return;
+      const outlineScale = radius * 1.2;
 
-      for (let weekIndex = 0; weekIndex < weeks.length; weekIndex += 1) {
-        const overlay = weekOverlays.get(weekIndex);
-        if (!overlay || overlay.periods.length === 0) continue;
-
+      instance.weekIndices.forEach((weekIndex, weekOffset) => {
         const col = weekIndex % cols;
         const row = Math.floor(weekIndex / cols);
         const x = startX + col * cellSize;
         const y = startY - row * cellSize;
 
-        dummy.position.set(x, y, 0.05);
-        dummy.scale.set(ringScale, ringScale, 1);
+        dummy.position.set(x, y, 0.03);
+        dummy.scale.set(outlineScale, outlineScale, 1);
         dummy.updateMatrix();
-        periodMesh.setMatrixAt(periodIndex, dummy.matrix);
+        mesh.setMatrixAt(weekOffset, dummy.matrix);
+      });
 
-        // Set color from first period
-        const color = new THREE.Color(overlay.periods[0].color ?? DEFAULT_PERIOD_COLOR);
-        periodMesh.setColorAt(periodIndex, color);
-
-        periodIndex += 1;
-      }
-      periodMesh.count = periodIndex;
-      periodMesh.instanceMatrix.needsUpdate = true;
-      if (periodMesh.instanceColor) periodMesh.instanceColor.needsUpdate = true;
-    }
+      mesh.count = instance.weekIndices.length;
+      mesh.instanceMatrix.needsUpdate = true;
+    });
 
     controlsRef.current?.update();
   }, [weeks, statusCounts, weekOverlays]);
@@ -390,12 +414,12 @@ const WeeksVisualization = () => {
       (eventMeshRef.current.material as THREE.Material).dispose();
       eventMeshRef.current = null;
     }
-    if (periodMeshRef.current) {
-      gridGroupRef.current?.remove(periodMeshRef.current);
-      periodMeshRef.current.geometry.dispose();
-      (periodMeshRef.current.material as THREE.Material).dispose();
-      periodMeshRef.current = null;
-    }
+    periodMeshesRef.current.forEach((mesh) => {
+      gridGroupRef.current?.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    });
+    periodMeshesRef.current = [];
 
     // Create event dot mesh (small circles)
     const maxEvents = Math.max(overlayStats.eventCount, 1);
@@ -407,18 +431,28 @@ const WeeksVisualization = () => {
     eventMeshRef.current = eventMesh;
     gridGroupRef.current?.add(eventMesh);
 
-    // Create period ring mesh
-    const maxPeriodWeeks = Math.max(overlayStats.periodWeekCount, 1);
-    const ringGeometry = new THREE.RingGeometry(0.8, 1, 24);
-    const ringMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
-    const periodMesh = new THREE.InstancedMesh(ringGeometry, ringMaterial, maxPeriodWeeks);
-    periodMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    periodMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(maxPeriodWeeks * 3), 3);
-    periodMeshRef.current = periodMesh;
-    gridGroupRef.current?.add(periodMesh);
+    // Create period outline meshes, one per period to lock in color
+    periodInstances.forEach((instance) => {
+      const ringGeometry = new THREE.RingGeometry(0.7, 1, 32);
+      const color = new THREE.Color(instance.period.color ?? DEFAULT_PERIOD_COLOR);
+      const ringMaterial = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.9,
+        side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.InstancedMesh(
+        ringGeometry,
+        ringMaterial,
+        Math.max(instance.weekIndices.length, 1),
+      );
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      periodMeshesRef.current.push(mesh);
+      gridGroupRef.current?.add(mesh);
+    });
 
     updateLayout();
-  }, [colorMap, statusCounts, overlayStats, updateLayout]);
+  }, [colorMap, statusCounts, overlayStats, periodInstances, updateLayout]);
 
   useEffect(() => {
     const handleResize = () => updateLayout();
@@ -477,8 +511,13 @@ const WeeksVisualization = () => {
       clientX: event.clientX,
       clientY: event.clientY,
       label: `${formatDisplayDate(week.date)} · ${week.status}`,
-      events: overlay?.events.map((e) => e.label),
-      periods: overlay?.periods.map((p) => p.label),
+      events: overlay?.events.map(
+        (e) => `${e.calendarName}: ${e.label} (${formatPartialDate(e.date)})`,
+      ),
+      periods: overlay?.periods.map(
+        (p) =>
+          `${p.calendarName}: ${p.label} (${formatPartialDate(p.start)} → ${formatPartialDate(p.end)})`,
+      ),
     });
   };
 

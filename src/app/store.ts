@@ -17,6 +17,7 @@ interface LifeState {
 
 interface CalendarState {
     calendars: Calendar[];
+    activeCalendarId: string | null;
 }
 
 interface ThemeState {
@@ -46,14 +47,17 @@ const defaultCalendarsState: CalendarState = {
             name: 'Personal',
             events: [],
             periods: [],
+            isVisible: true,
         },
         {
             id: 'f15cf47e-d612-42a9-8417-c7770526775f',
             name: 'Career',
             events: [],
             periods: [],
+            isVisible: true,
         }
     ],
+    activeCalendarId: 'cdf1a3f0-31f0-4a3f-94d0-c18f2c938853',
 };
 
 const defaultTheme: ColorTheme = {
@@ -120,6 +124,17 @@ const calendarSlice = createSlice({
     name: 'calendar',
     initialState: defaultCalendarsState,
     reducers: {
+        setActiveCalendar(state, action: PayloadAction<string | null>) {
+            const exists = state.calendars.some((calendar) => calendar.id === action.payload);
+            state.activeCalendarId = exists ? action.payload : state.activeCalendarId;
+        },
+        setCalendars(state, action: PayloadAction<Calendar[]>) {
+            state.calendars = action.payload;
+            state.activeCalendarId =
+                action.payload.find((calendar) => calendar.id === state.activeCalendarId)?.id ??
+                action.payload[0]?.id ??
+                null;
+        },
         upsertCalendar(state, action: PayloadAction<Calendar>) {
             const index = state.calendars.findIndex((calendar) => calendar.id === action.payload.id);
             if (index >= 0) {
@@ -127,9 +142,15 @@ const calendarSlice = createSlice({
                 return;
             }
             state.calendars.push(action.payload);
+            if (!state.activeCalendarId) {
+                state.activeCalendarId = action.payload.id;
+            }
         },
         removeCalendar(state, action: PayloadAction<string>) {
             state.calendars = state.calendars.filter((calendar) => calendar.id !== action.payload);
+            if (state.activeCalendarId === action.payload) {
+                state.activeCalendarId = state.calendars[0]?.id ?? null;
+            }
         },
         upsertEvent(state, action: PayloadAction<EventPayload>) {
             const calendar = state.calendars.find((c) => c.id === action.payload.calendarId);

@@ -11,8 +11,8 @@ export const dateToWeekIndex = (date: PartialDate, birthDate: PartialDate): numb
 };
 
 export interface WeekOverlay {
-  events: CalendarEvent[];
-  periods: CalendarPeriod[];
+  events: Array<CalendarEvent & { calendarName: string }>;
+  periods: Array<CalendarPeriod & { calendarName: string }>;
 }
 
 export const buildWeekOverlays = (
@@ -35,7 +35,7 @@ export const buildWeekOverlays = (
     for (const event of calendar.events) {
       const weekIndex = dateToWeekIndex(event.date, birthDate);
       if (weekIndex >= 0 && weekIndex < totalWeeks) {
-        getOrCreate(weekIndex).events.push(event);
+        getOrCreate(weekIndex).events.push({ ...event, calendarName: calendar.name });
       }
     }
 
@@ -44,7 +44,7 @@ export const buildWeekOverlays = (
       const endWeek = dateToWeekIndex(period.end, birthDate);
 
       for (let i = Math.max(0, startWeek); i <= Math.min(totalWeeks - 1, endWeek); i++) {
-        getOrCreate(i).periods.push(period);
+        getOrCreate(i).periods.push({ ...period, calendarName: calendar.name });
       }
     }
   }
