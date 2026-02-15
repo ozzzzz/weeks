@@ -1,67 +1,53 @@
 # Weeks
 
-A life visualization application that displays your entire life as weeks - each week represented as a single "coin" on the screen.
+Static life visualization app: your full lifetime shown as week "coins".
 
-## Description
+## Stack
 
-This application visualizes weeks for the whole life of a person.
+- Vite + React + TypeScript
+- Mantine for UI
+- Tailwind CSS for layout/styles
+- Redux Toolkit for state
+- Three.js for week rendering
 
-To do it we need 3 main things:
-- Date of birth (or at least year)
-- Life expectancy based on statistics or user-defined
-- Extra life expectancy (e.g. 100 years in total)
+## Local-only storage
 
-## Main Features
+- App state is stored in `localStorage`
+- No backend, no cloud persistence
+- Settings can be exported to JSON and imported back from JSON
 
-- 1 week as a 1 "coin" (point/circle) on the screen
-- Always show all weeks for the whole life (up to 100 years) or have the ability to zoom to see specific periods better
-- Dates are fixed in the timeline, but weeks are based on the person's date of birth
+## Development
 
-## Calendar Features
-
-- Set specific dates with visual marks (e.g. birth of a child, wedding day)
-- Set periods in different formats (specific date, month/year, or year only) with visual marks (e.g. university studies, work periods)
-
-## Visual Features
-
-- Show weeks (already lived, current, remaining, extra) in different colors with support for different color themes
-- Show dates when user hovers over specific week
-- Allow user to set their own life expectancy
-- 1/3 menu on the left side that can be collapsed/expanded
-
-## AI Features
-
-- Extract structured data from unstructured text input using an LLM agent
-
-## Tech Stack
-
-- Next.js with App Router
-- TypeScript
-- Mantine components for UI
-- Tailwind CSS for layout and custom styles
-- Redux Toolkit for state management
-
-## Project Structure
-
-```
-src/app/
-├── components/   # React components
-├── utils/        # Utility functions
-├── types/        # TypeScript types
-├── store.ts      # Redux store and slices
-└── hooks.ts      # Custom hooks
+```bash
+npm install
+npm run dev
 ```
 
-## Roadmap
+## Build
 
-### Basic Features
-- [ ] Extract Three.js canvas into a separate component
-- [ ] Add possibility to set calendar events and periods
+```bash
+npm run build
+npm run preview
+```
 
-### Persistence
-- [ ] Save/load user data in JSON format
-- [ ] Save in the cloud with authentication or unique link
+## GitHub Pages deploy
 
-### Nice to Have
-- [ ] Save expand/collapse state of left menu in local storage
-- [ ] Save user settings (life expectancy, extra years, color theme) in local storage
+```bash
+npm run deploy
+```
+
+The Vite config uses `base: "./"` so static assets work on GitHub Pages subpaths.
+
+## Project structure
+
+```text
+src/
+├── app/
+│   ├── components/
+│   ├── types/
+│   ├── utils/
+│   ├── hooks.ts
+│   └── store.ts
+├── App.tsx
+└── main.tsx
+```

@@ -238,7 +238,7 @@ export const store = configureStore({
         theme: themeSlice.reducer,
         layout: layoutSlice.reducer,
     },
-    devTools: process.env.NODE_ENV !== 'production',
+    devTools: true,
 });
 
 export const lifeActions = lifeSlice.actions;

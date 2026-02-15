@@ -1,19 +1,12 @@
-'use client';
-
 import { useEffect } from 'react';
-import "./globals.css";
-import '@mantine/core/styles.css';
-import { Provider } from "react-redux";
-import { MantineProvider } from "@mantine/core";
-import { calendarActions, layoutActions, lifeActions, store } from "./store";
-import { loadPersistedState, savePersistedState } from './utils/persistence';
-import Navigation from "./components/Navigation";
+import { MantineProvider } from '@mantine/core';
+import { Provider } from 'react-redux';
+import Navigation from './app/components/Navigation';
+import Home from './app/page';
+import { calendarActions, layoutActions, lifeActions, store } from './app/store';
+import { loadPersistedState, savePersistedState } from './app/utils/persistence';
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const App = () => {
   useEffect(() => {
     const persisted = loadPersistedState();
     if (persisted) {
@@ -37,19 +30,15 @@ export default function RootLayout({
   }, []);
 
   return (
-    <html lang="en">
-      <body
-        className="antialiased"
-      >
-        <Provider store={store}>
-          <MantineProvider defaultColorScheme="light">
-            <Navigation />
-            <main>
-              {children}
-            </main>
-          </MantineProvider>
-        </Provider>
-      </body>
-    </html>
+    <Provider store={store}>
+      <MantineProvider defaultColorScheme="light">
+        <Navigation />
+        <main>
+          <Home />
+        </main>
+      </MantineProvider>
+    </Provider>
   );
-}
+};
+
+export default App;

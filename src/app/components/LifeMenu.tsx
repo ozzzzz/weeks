@@ -1,21 +1,25 @@
 'use client';
 
-import { useMemo } from 'react';
+import { ChangeEvent, useMemo, useRef, useState } from 'react';
 import { ActionIcon, Button, Divider, Group, NumberInput, Paper, Stack, Tabs, Text, Transition } from '@mantine/core';
-import { IconChevronDown, IconChevronUp, IconUser, IconCalendar } from '@tabler/icons-react';
+import { IconCalendar, IconChevronDown, IconChevronUp, IconDownload, IconUpload, IconUser } from '@tabler/icons-react';
 import { calculateAge } from '../utils/dates';
 import { buildWeekOverlays } from '../utils/calendar';
 import { buildWeekPoints } from '../utils/weeks';
 import { buildDemoState } from '../utils/demoData';
 import { calendarActions, lifeActions, layoutActions } from '../store';
 import { useAppDispatch, useAppSelector } from '../hooks';
+import { downloadPersistedState, parsePersistedState } from '../utils/persistence';
 import CalendarList from './CalendarList';
 
 const LifeMenu = () => {
   const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
   const calendars = useAppSelector((state) => state.calendar.calendars);
+  const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
   const isMenuCollapsed = useAppSelector((state) => state.layout.isMenuCollapsed);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState<string | null>(null);
   const age = calculateAge(lifeProfile.dateOfBirth);
 
   const weeks = useMemo(() => buildWeekPoints(lifeProfile), [lifeProfile]);
@@ -72,6 +76,40 @@ const LifeMenu = () => {
 
   const handleClearCalendars = () => {
     dispatch(calendarActions.setCalendars([]));
+  };
+
+  const handleDownloadSettings = () => {
+    downloadPersistedState({
+      profile: lifeProfile,
+      calendars,
+      activeCalendarId,
+      isMenuCollapsed,
+    });
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleUploadSettings = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const raw = await file.text();
+    const parsed = parsePersistedState(raw);
+
+    if (!parsed) {
+      setImportError('Invalid settings JSON file');
+      event.target.value = '';
+      return;
+    }
+
+    dispatch(lifeActions.setLifeProfile(parsed.profile));
+    dispatch(calendarActions.setCalendars(parsed.calendars));
+    dispatch(calendarActions.setActiveCalendar(parsed.activeCalendarId));
+    dispatch(layoutActions.setMenuCollapsed(parsed.isMenuCollapsed));
+    setImportError(null);
+    event.target.value = '';
   };
 
   return (
@@ -210,6 +248,43 @@ const LifeMenu = () => {
                           Clear calendars
                         </Button>
                       </Group>
+                    </Stack>
+                    <Divider />
+                    <Stack gap="xs">
+                      <Text fw={600}>Settings backup</Text>
+                      <Text size="xs" c="dimmed">
+                        Export current settings to JSON and restore later from file.
+                      </Text>
+                      <Group gap="xs">
+                        <Button
+                          size="xs"
+                          variant="light"
+                          leftSection={<IconDownload size={14} />}
+                          onClick={handleDownloadSettings}
+                        >
+                          Download JSON
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="default"
+                          leftSection={<IconUpload size={14} />}
+                          onClick={handleUploadClick}
+                        >
+                          Upload JSON
+                        </Button>
+                      </Group>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/json"
+                        className="hidden"
+                        onChange={handleUploadSettings}
+                      />
+                      {importError && (
+                        <Text size="xs" c="red">
+                          {importError}
+                        </Text>
+                      )}
                     </Stack>
                   </Stack>
                 </Tabs.Panel>

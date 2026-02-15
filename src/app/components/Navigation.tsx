@@ -1,12 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { Anchor, Container, Group, Title } from '@mantine/core';
-
-const links = [
-  { href: '/', label: 'Home' },
-  { href: '/about', label: 'About' },
-];
+import { Container, Group, Text, Title } from '@mantine/core';
 
 const Navigation = () => {
   return (
@@ -14,13 +8,9 @@ const Navigation = () => {
       <Container fluid px="lg" py="xs">
         <Group justify="space-between">
           <Title order={3}>Weeks</Title>
-          <Group gap="md">
-            {links.map((link) => (
-              <Anchor key={link.href} component={Link} href={link.href}>
-                {link.label}
-              </Anchor>
-            ))}
-          </Group>
+          <Text c="dimmed" size="sm">
+            Static local tool
+          </Text>
         </Group>
       </Container>
     </header>
