@@ -4,7 +4,7 @@ Read [README.md](README.md) for project description, features, and tech stack.
 
 ## Coding Guidelines
 
-- Use Next.js App Router patterns
+- Use Vite for development
 - Use TypeScript with strict typing
 - Use Mantine components for UI - keep it simple
 - Use Tailwind CSS for layout and custom styles
