@@ -1,12 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Accordion, ActionIcon, Button, Group, Stack, Text, TextInput } from '@mantine/core';
+import { Accordion, ActionIcon, Box, Button, Group, Radio, Stack, Text, TextInput } from '@mantine/core';
 import { IconPlus, IconTrash, IconEdit, IconCheck, IconX } from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { calendarActions } from '../store';
 import { Calendar } from '../types';
 import CalendarDetail from './CalendarDetail';
+
+const DEFAULT_CALENDAR_COLOR = '#94a3b8';
+
+const getCalendarColor = (calendar: Calendar): string => {
+  if (calendar.periods.length > 0 && calendar.periods[0].color) return calendar.periods[0].color;
+  if (calendar.events.length > 0 && calendar.events[0].color) return calendar.events[0].color;
+  return DEFAULT_CALENDAR_COLOR;
+};
 
 const CalendarList = () => {
   const dispatch = useAppDispatch();
@@ -89,14 +97,23 @@ const CalendarList = () => {
             <Accordion.Item key={calendar.id} value={calendar.id}>
               <Accordion.Control>
                 <Group justify="space-between" wrap="nowrap" style={{ flex: 1 }}>
-                  <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
-                    <input
-                      type="radio"
+                  <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
+                    <Radio
                       name="activeCalendar"
                       checked={activeCalendarId === calendar.id}
                       onChange={() => handleSelectCalendar(calendar.id)}
                       onClick={(e) => e.stopPropagation()}
                       aria-label={`Select ${calendar.name}`}
+                      size="xs"
+                    />
+                    <Box
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        backgroundColor: getCalendarColor(calendar),
+                        flexShrink: 0,
+                      }}
                     />
                     {editingId === calendar.id ? (
                       <TextInput
@@ -109,7 +126,9 @@ const CalendarList = () => {
                         autoFocus
                       />
                     ) : (
-                      <Text size="sm">{calendar.name}</Text>
+                      <Text size="sm" fw={activeCalendarId === calendar.id ? 600 : 400}>
+                        {calendar.name}
+                      </Text>
                     )}
                   </Group>
 

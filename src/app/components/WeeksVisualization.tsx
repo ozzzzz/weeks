@@ -276,7 +276,7 @@ const WeeksVisualization = () => {
     const cols = bestCols;
     const rows = Math.ceil(weeks.length / cols);
     const cellSize = bestCell;
-    const radius = Math.max(1.2, (cellSize * 0.65) / 2);
+    const radius = Math.max(1.2, (cellSize * 0.40) / 2);
     const thickness = Math.max(0.6, radius * 0.3);
     const startX = -((cols * cellSize) / 2) + cellSize / 2;
     const startY = (rows * cellSize) / 2 - cellSize / 2;
@@ -326,11 +326,11 @@ const WeeksVisualization = () => {
       mesh.instanceMatrix.needsUpdate = true;
     });
 
-    // Position event dots
+    // Position event glow halos (behind week dots)
     const eventMesh = eventMeshRef.current;
     if (eventMesh) {
       let eventIndex = 0;
-      const eventDotRadius = radius * 0.55;
+      const glowRadius = radius * 1.5;
 
       for (let weekIndex = 0; weekIndex < weeks.length; weekIndex += 1) {
         const overlay = weekOverlays.get(weekIndex);
@@ -341,8 +341,8 @@ const WeeksVisualization = () => {
         const x = startX + col * cellSize;
         const y = startY - row * cellSize;
 
-        dummy.position.set(x, y, 0.12);
-        dummy.scale.set(eventDotRadius, eventDotRadius, 1);
+        dummy.position.set(x, y, -0.04);
+        dummy.scale.set(glowRadius, glowRadius, 1);
         dummy.updateMatrix();
         eventMesh.setMatrixAt(eventIndex, dummy.matrix);
 
@@ -422,13 +422,19 @@ const WeeksVisualization = () => {
     });
     periodMeshesRef.current = [];
 
-    // Create event dot mesh (small circles)
+    // Create event glow mesh (larger semi-transparent halos behind dots)
     const maxEvents = Math.max(overlayStats.eventCount, 1);
-    const eventGeometry = new THREE.CircleGeometry(1, 16);
-    const eventMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
+    const eventGeometry = new THREE.CircleGeometry(1, 32);
+    const eventMaterial = new THREE.MeshBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false,
+    });
     const eventMesh = new THREE.InstancedMesh(eventGeometry, eventMaterial, maxEvents);
     eventMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     eventMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(maxEvents * 3), 3);
+    eventMesh.renderOrder = -0.5;
     eventMeshRef.current = eventMesh;
     gridGroupRef.current?.add(eventMesh);
 
@@ -438,7 +444,7 @@ const WeeksVisualization = () => {
     periodInstances.forEach((instance) => {
       const planeGeometry = new THREE.PlaneGeometry(1, 1);
       const baseColor = new THREE.Color(instance.period.color ?? DEFAULT_PERIOD_COLOR);
-      const tintColor = baseColor.clone().lerp(backgroundColor, 0.7);
+      const tintColor = baseColor.clone().lerp(backgroundColor, 0.35);
       const planeMaterial = new THREE.MeshBasicMaterial({
         color: tintColor,
         transparent: false,
