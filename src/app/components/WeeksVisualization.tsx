@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Badge, Group, Paper, Text } from '@mantine/core';
-import { useAppSelector } from '../hooks';
+import { useAppSelector, useAppDispatch } from '../hooks';
+import { layoutActions } from '../store';
 import { buildWeekPoints } from '../utils/weeks';
 import { buildWeekOverlays, dateToWeekIndex } from '../utils/calendar';
 import { formatDisplayDate, formatPartialDate } from '../utils/dates';
@@ -55,10 +56,13 @@ const WeeksVisualization = () => {
   const layoutRef = useRef<LayoutInfo | null>(null);
   const didSetInitialZoom = useRef(false);
   const lightsRef = useRef<{ ambient: THREE.AmbientLight; directional: THREE.DirectionalLight } | null>(null);
+  const focusAnimRef = useRef<{ startTarget: THREE.Vector3; endTarget: THREE.Vector3; startCamPos: THREE.Vector3; endCamPos: THREE.Vector3; startZoom: number; endZoom: number; progress: number } | null>(null);
 
+  const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
   const calendars = useAppSelector((state) => state.calendar.calendars);
   const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
+  const focusWeekIndex = useAppSelector((state) => state.layout.focusWeekIndex);
   const themeState = useAppSelector((state) => state.theme);
   const activeTheme = themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ?? themeState.themes[0];
 
@@ -190,6 +194,16 @@ const WeeksVisualization = () => {
     controlsRef.current = controls;
 
     const render = () => {
+      const anim = focusAnimRef.current;
+      if (anim && controlsRef.current && cameraRef.current) {
+        anim.progress = Math.min(1, anim.progress + 0.035);
+        const t = 1 - Math.pow(1 - anim.progress, 3); // ease-out cubic
+        controlsRef.current.target.lerpVectors(anim.startTarget, anim.endTarget, t);
+        cameraRef.current.position.lerpVectors(anim.startCamPos, anim.endCamPos, t);
+        cameraRef.current.zoom = anim.startZoom + (anim.endZoom - anim.startZoom) * t;
+        cameraRef.current.updateProjectionMatrix();
+        if (anim.progress >= 1) focusAnimRef.current = null;
+      }
       controlsRef.current?.update();
       if (!rendererRef.current || !cameraRef.current || !sceneRef.current) return;
       rendererRef.current.render(sceneRef.current, cameraRef.current);
@@ -481,6 +495,35 @@ const WeeksVisualization = () => {
       resizeObserver?.disconnect();
     };
   }, [updateLayout]);
+
+  // Animate camera to focused week
+  useEffect(() => {
+    if (focusWeekIndex == null) return;
+    const layout = layoutRef.current;
+    const controls = controlsRef.current;
+    const camera = cameraRef.current;
+    if (!layout || !controls || !camera) return;
+
+    const col = focusWeekIndex % layout.cols;
+    const row = Math.floor(focusWeekIndex / layout.cols);
+    const x = layout.startX + col * layout.cellSize;
+    const y = layout.startY - row * layout.cellSize;
+
+    const endTarget = new THREE.Vector3(x, y, 0);
+    const offset = camera.position.clone().sub(controls.target);
+
+    focusAnimRef.current = {
+      startTarget: controls.target.clone(),
+      endTarget,
+      startCamPos: camera.position.clone(),
+      endCamPos: endTarget.clone().add(offset),
+      startZoom: camera.zoom,
+      endZoom: 1.8,
+      progress: 0,
+    };
+
+    dispatch(layoutActions.setFocusWeek(null));
+  }, [focusWeekIndex, dispatch]);
 
   const colorForStatus = (status: WeekStatus) => activeTheme?.weeks[status] ?? '#ccc';
 

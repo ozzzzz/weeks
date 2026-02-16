@@ -16,4 +16,5 @@ export interface ColorTheme {
 
 export interface LayoutState {
   isMenuCollapsed: boolean;
+  focusWeekIndex: number | null;
 }

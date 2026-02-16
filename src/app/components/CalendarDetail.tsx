@@ -1,12 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ActionIcon, Button, Group, Modal, SegmentedControl, Stack, Text, TextInput } from '@mantine/core';
+import { ActionIcon, Button, Group, Modal, Stack, Text } from '@mantine/core';
 import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
-import { useAppDispatch } from '../hooks';
-import { calendarActions } from '../store';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { calendarActions, layoutActions } from '../store';
 import { Calendar, CalendarEvent, CalendarPeriod } from '../types';
-import { partialDateToDate } from '../utils/dates';
+import { partialDateToDate, formatPartialDate } from '../utils/dates';
+import { dateToWeekIndex } from '../utils/calendar';
 import EventForm from './EventForm';
 import PeriodForm from './PeriodForm';
 
@@ -21,71 +22,30 @@ type ModalMode =
 
 const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
   const dispatch = useAppDispatch();
+  const birthDate = useAppSelector((state) => state.life.profile.dateOfBirth);
   const [modal, setModal] = useState<ModalMode>({ type: 'none' });
-  const [eventQuery, setEventQuery] = useState('');
-  const [eventRange, setEventRange] = useState<'all' | 'past' | 'future'>('all');
-  const [eventSort, setEventSort] = useState<'asc' | 'desc'>('asc');
-  const [periodQuery, setPeriodQuery] = useState('');
-  const [periodRange, setPeriodRange] = useState<'all' | 'active' | 'past' | 'future'>('all');
-  const [periodSort, setPeriodSort] = useState<'asc' | 'desc'>('asc');
 
-  const todayStart = useMemo(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  }, []);
+  const sortedEvents = useMemo(() => {
+    return [...calendar.events].sort(
+      (a, b) => partialDateToDate(a.date).getTime() - partialDateToDate(b.date).getTime(),
+    );
+  }, [calendar.events]);
 
-  const filteredEvents = useMemo(() => {
-    const normalizedQuery = eventQuery.trim().toLowerCase();
+  const sortedPeriods = useMemo(() => {
+    return [...calendar.periods].sort(
+      (a, b) => partialDateToDate(a.start).getTime() - partialDateToDate(b.start).getTime(),
+    );
+  }, [calendar.periods]);
 
-    const matchesRange = (event: CalendarEvent) => {
-      const eventDate = partialDateToDate(event.date);
-      if (eventRange === 'past') return eventDate < todayStart;
-      if (eventRange === 'future') return eventDate >= todayStart;
-      return true;
-    };
+  const handleFocusEvent = (event: CalendarEvent) => {
+    const weekIndex = dateToWeekIndex(event.date, birthDate);
+    dispatch(layoutActions.setFocusWeek(weekIndex));
+  };
 
-    const matchesQuery = (event: CalendarEvent) => {
-      if (!normalizedQuery) return true;
-      return event.label.toLowerCase().includes(normalizedQuery);
-    };
-
-    const sorted = [...calendar.events]
-      .filter((event) => matchesQuery(event) && matchesRange(event))
-      .sort((a, b) => {
-        const diff = partialDateToDate(a.date).getTime() - partialDateToDate(b.date).getTime();
-        return eventSort === 'asc' ? diff : -diff;
-      });
-
-    return sorted;
-  }, [calendar.events, eventQuery, eventRange, eventSort, todayStart]);
-
-  const filteredPeriods = useMemo(() => {
-    const normalizedQuery = periodQuery.trim().toLowerCase();
-
-    const matchesRange = (period: CalendarPeriod) => {
-      const startDate = partialDateToDate(period.start);
-      const endDate = partialDateToDate(period.end);
-
-      if (periodRange === 'past') return endDate < todayStart;
-      if (periodRange === 'future') return startDate > todayStart;
-      if (periodRange === 'active') return startDate <= todayStart && endDate >= todayStart;
-      return true;
-    };
-
-    const matchesQuery = (period: CalendarPeriod) => {
-      if (!normalizedQuery) return true;
-      return period.label.toLowerCase().includes(normalizedQuery);
-    };
-
-    const sorted = [...calendar.periods]
-      .filter((period) => matchesQuery(period) && matchesRange(period))
-      .sort((a, b) => {
-        const diff = partialDateToDate(a.start).getTime() - partialDateToDate(b.start).getTime();
-        return periodSort === 'asc' ? diff : -diff;
-      });
-
-    return sorted;
-  }, [calendar.periods, periodQuery, periodRange, periodSort, todayStart]);
+  const handleFocusPeriod = (period: CalendarPeriod) => {
+    const weekIndex = dateToWeekIndex(period.start, birthDate);
+    dispatch(layoutActions.setFocusWeek(weekIndex));
+  };
 
   const handleSaveEvent = (calendarId: string, event: CalendarEvent) => {
     dispatch(calendarActions.upsertEvent({ calendarId, event }));
@@ -119,57 +79,31 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
             Add
           </Button>
         </Group>
-        {calendar.events.length === 0 ? (
+        {sortedEvents.length === 0 ? (
           <Text size="xs" c="dimmed">No events</Text>
         ) : (
-          <>
-            <TextInput
-              placeholder="Search events"
-              size="xs"
-              value={eventQuery}
-              onChange={(e) => setEventQuery(e.target.value)}
-            />
-            <Group gap="xs" wrap="nowrap">
-              <SegmentedControl
-                size="xs"
-                value={eventRange}
-                onChange={(value) => setEventRange(value as 'all' | 'past' | 'future')}
-                data={[
-                  { label: 'All', value: 'all' },
-                  { label: 'Past', value: 'past' },
-                  { label: 'Future', value: 'future' },
-                ]}
-              />
-              <SegmentedControl
-                size="xs"
-                value={eventSort}
-                onChange={(value) => setEventSort(value as 'asc' | 'desc')}
-                data={[
-                  { label: 'Oldest', value: 'asc' },
-                  { label: 'Newest', value: 'desc' },
-                ]}
-              />
-            </Group>
-
-            {filteredEvents.length === 0 ? (
-              <Text size="xs" c="dimmed">No matching events</Text>
-            ) : (
-              filteredEvents.map((event) => (
-            <Group key={event.id} justify="space-between" wrap="nowrap">
-              <Group gap="xs" wrap="nowrap">
-                {event.color && (
-                  <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      backgroundColor: event.color,
-                    }}
-                  />
-                )}
-                <Text size="xs" lineClamp={1}>{event.label}</Text>
+          sortedEvents.map((event) => (
+            <Group
+              key={event.id}
+              justify="space-between"
+              wrap="nowrap"
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleFocusEvent(event)}
+            >
+              <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: event.color ?? '#ef4444',
+                    flexShrink: 0,
+                  }}
+                />
+                <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{event.label}</Text>
+                <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>{formatPartialDate(event.date)}</Text>
               </Group>
-              <Group gap={4} wrap="nowrap">
+              <Group gap={4} wrap="nowrap" onClick={(e) => e.stopPropagation()}>
                 <ActionIcon
                   size="xs"
                   variant="subtle"
@@ -189,9 +123,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
                 </ActionIcon>
               </Group>
             </Group>
-              ))
-            )}
-          </>
+          ))
         )}
       </Stack>
 
@@ -207,58 +139,33 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
             Add
           </Button>
         </Group>
-        {calendar.periods.length === 0 ? (
+        {sortedPeriods.length === 0 ? (
           <Text size="xs" c="dimmed">No periods</Text>
         ) : (
-          <>
-            <TextInput
-              placeholder="Search periods"
-              size="xs"
-              value={periodQuery}
-              onChange={(e) => setPeriodQuery(e.target.value)}
-            />
-            <Group gap="xs" wrap="nowrap">
-              <SegmentedControl
-                size="xs"
-                value={periodRange}
-                onChange={(value) => setPeriodRange(value as 'all' | 'active' | 'past' | 'future')}
-                data={[
-                  { label: 'All', value: 'all' },
-                  { label: 'Active', value: 'active' },
-                  { label: 'Past', value: 'past' },
-                  { label: 'Future', value: 'future' },
-                ]}
-              />
-              <SegmentedControl
-                size="xs"
-                value={periodSort}
-                onChange={(value) => setPeriodSort(value as 'asc' | 'desc')}
-                data={[
-                  { label: 'Oldest', value: 'asc' },
-                  { label: 'Newest', value: 'desc' },
-                ]}
-              />
-            </Group>
-
-            {filteredPeriods.length === 0 ? (
-              <Text size="xs" c="dimmed">No matching periods</Text>
-            ) : (
-              filteredPeriods.map((period) => (
-            <Group key={period.id} justify="space-between" wrap="nowrap">
-              <Group gap="xs" wrap="nowrap">
-                {period.color && (
-                  <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 2,
-                      backgroundColor: period.color,
-                    }}
-                  />
-                )}
-                <Text size="xs" lineClamp={1}>{period.label}</Text>
+          sortedPeriods.map((period) => (
+            <Group
+              key={period.id}
+              justify="space-between"
+              wrap="nowrap"
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleFocusPeriod(period)}
+            >
+              <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 2,
+                    backgroundColor: period.color ?? '#3b82f6',
+                    flexShrink: 0,
+                  }}
+                />
+                <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{period.label}</Text>
+                <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                  {formatPartialDate(period.start)} — {formatPartialDate(period.end)}
+                </Text>
               </Group>
-              <Group gap={4} wrap="nowrap">
+              <Group gap={4} wrap="nowrap" onClick={(e) => e.stopPropagation()}>
                 <ActionIcon
                   size="xs"
                   variant="subtle"
@@ -278,9 +185,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
                 </ActionIcon>
               </Group>
             </Group>
-              ))
-            )}
-          </>
+          ))
         )}
       </Stack>
 

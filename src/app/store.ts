@@ -81,6 +81,7 @@ const defaultThemeState: ThemeState = {
 
 const defaultLayoutState: LayoutState = {
     isMenuCollapsed: true,
+    focusWeekIndex: null,
 };
 
 const lifeSlice = createSlice({
@@ -227,6 +228,9 @@ const layoutSlice = createSlice({
         },
         setMenuCollapsed(state, action: PayloadAction<boolean>) {
             state.isMenuCollapsed = action.payload;
+        },
+        setFocusWeek(state, action: PayloadAction<number | null>) {
+            state.focusWeekIndex = action.payload;
         },
     },
 });
