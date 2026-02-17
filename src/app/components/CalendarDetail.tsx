@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ActionIcon, Button, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
 import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { calendarActions, layoutActions } from '../store';
@@ -77,15 +77,15 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
       <Stack gap="xs">
         <Group justify="space-between">
           <Text size="sm" fw={500}>Events</Text>
-          <Button
-            leftSection={<IconPlus size={12} />}
+          <ActionIcon
+            size="xs"
             variant="subtle"
             color="dark"
-            size="xs"
             onClick={() => setModal({ type: 'event' })}
+            aria-label="Add event"
           >
-            Add
-          </Button>
+            <IconPlus size={12} />
+          </ActionIcon>
         </Group>
         {sortedEvents.length === 0 ? (
           <Text size="xs" c="dimmed">No events</Text>
@@ -143,15 +143,15 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
       <Stack gap="xs">
         <Group justify="space-between">
           <Text size="sm" fw={500}>Periods</Text>
-          <Button
-            leftSection={<IconPlus size={12} />}
+          <ActionIcon
+            size="xs"
             variant="subtle"
             color="dark"
-            size="xs"
             onClick={() => setModal({ type: 'period' })}
+            aria-label="Add period"
           >
-            Add
-          </Button>
+            <IconPlus size={12} />
+          </ActionIcon>
         </Group>
         {sortedPeriods.length === 0 ? (
           <Text size="xs" c="dimmed">No periods</Text>
