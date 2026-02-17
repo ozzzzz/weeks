@@ -52,7 +52,9 @@ const WeeksVisualization = () => {
   });
   const eventMeshRef = useRef<THREE.InstancedMesh | null>(null);
   const periodMeshesRef = useRef<THREE.InstancedMesh[]>([]);
+  const pulseHaloRef = useRef<THREE.InstancedMesh | null>(null);
   const layoutRef = useRef<LayoutInfo | null>(null);
+  const pulseTimeRef = useRef(0);
   const didSetInitialZoom = useRef(false);
   const lightsRef = useRef<{ ambient: THREE.AmbientLight; directional: THREE.DirectionalLight } | null>(null);
   const focusAnimRef = useRef<{ startTarget: THREE.Vector3; endTarget: THREE.Vector3; startCamPos: THREE.Vector3; endCamPos: THREE.Vector3; startZoom: number; endZoom: number; progress: number } | null>(null);
@@ -63,6 +65,8 @@ const WeeksVisualization = () => {
   const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
   const focusWeekIndex = useAppSelector((state) => state.layout.focusWeekIndex);
   const resetView = useAppSelector((state) => state.layout.resetView);
+  const hoveredEventId = useAppSelector((state) => state.layout.hoveredEventId);
+  const hoveredPeriodId = useAppSelector((state) => state.layout.hoveredPeriodId);
   const themeState = useAppSelector((state) => state.theme);
   const activeTheme = themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ?? themeState.themes[0];
 
@@ -204,6 +208,16 @@ const WeeksVisualization = () => {
         cameraRef.current.updateProjectionMatrix();
         if (anim.progress >= 1) focusAnimRef.current = null;
       }
+
+      // Pulse animation
+      pulseTimeRef.current += 0.05;
+      const pulseHalo = pulseHaloRef.current;
+      if (pulseHalo && pulseHalo.material) {
+        const pulseFactor = (Math.sin(pulseTimeRef.current) + 1) / 2; // 0 to 1
+        const opacity = 0.2 + pulseFactor * 0.3; // 0.2 to 0.5
+        (pulseHalo.material as THREE.MeshBasicMaterial).opacity = opacity;
+      }
+
       controlsRef.current?.update();
       if (!rendererRef.current || !cameraRef.current || !sceneRef.current) return;
       rendererRef.current.render(sceneRef.current, cameraRef.current);
@@ -230,6 +244,11 @@ const WeeksVisualization = () => {
       if (eventMeshRef.current) {
         eventMeshRef.current.geometry.dispose();
         (eventMeshRef.current.material as THREE.Material).dispose();
+      }
+      if (pulseHaloRef.current) {
+        pulseHaloRef.current.geometry.dispose();
+        (pulseHaloRef.current.material as THREE.Material).dispose();
+        gridGroupRef.current?.remove(pulseHaloRef.current);
       }
       periodMeshesRef.current.forEach((mesh) => {
         mesh.geometry.dispose();
@@ -478,6 +497,74 @@ const WeeksVisualization = () => {
 
     updateLayout();
   }, [colorMap, statusCounts, overlayStats, periodInstances, updateLayout]);
+
+  // Create/update pulse halo for hovered event/period
+  useEffect(() => {
+    const layout = layoutRef.current;
+    if (!layout || !gridGroupRef.current) return;
+
+    // Find which weeks to highlight
+    let weekIndicesToHighlight: number[] = [];
+
+    if (hoveredEventId) {
+      calendars.forEach((calendar) => {
+        const event = calendar.events.find((e) => e.id === hoveredEventId);
+        if (event) {
+          const weekIndex = dateToWeekIndex(event.date, lifeProfile.dateOfBirth);
+          if (weekIndex >= 0 && weekIndex < weeks.length) {
+            weekIndicesToHighlight.push(weekIndex);
+          }
+        }
+      });
+    } else if (hoveredPeriodId) {
+      const instance = periodInstances.find((inst) => inst.period.id === hoveredPeriodId);
+      if (instance) {
+        weekIndicesToHighlight = instance.weekIndices;
+      }
+    }
+
+    // Remove existing pulse halo
+    if (pulseHaloRef.current) {
+      gridGroupRef.current.remove(pulseHaloRef.current);
+      pulseHaloRef.current.geometry.dispose();
+      (pulseHaloRef.current.material as THREE.Material).dispose();
+      pulseHaloRef.current = null;
+    }
+
+    // Create new pulse halo if we have weeks to highlight
+    if (weekIndicesToHighlight.length > 0) {
+      const geometry = new THREE.CircleGeometry(1, 32);
+      const material = new THREE.MeshBasicMaterial({
+        color: 0x3b82f6,
+        transparent: true,
+        opacity: 0.3,
+        depthWrite: false,
+      });
+      const mesh = new THREE.InstancedMesh(geometry, material, weekIndicesToHighlight.length);
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      mesh.renderOrder = 0.5;
+
+      const dummy = new THREE.Object3D();
+      const radius = Math.max(1.2, (layout.cellSize * 0.40) / 2);
+      const pulseRadius = radius * 2.2;
+
+      weekIndicesToHighlight.forEach((weekIndex, i) => {
+        const col = weekIndex % layout.cols;
+        const row = Math.floor(weekIndex / layout.cols);
+        const x = layout.startX + col * layout.cellSize;
+        const y = layout.startY - row * layout.cellSize;
+
+        dummy.position.set(x, y, 0.1);
+        dummy.scale.set(pulseRadius, pulseRadius, 1);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+      });
+
+      mesh.instanceMatrix.needsUpdate = true;
+      pulseHaloRef.current = mesh;
+      gridGroupRef.current.add(mesh);
+    }
+  }, [hoveredEventId, hoveredPeriodId, calendars, weeks, lifeProfile.dateOfBirth, periodInstances]);
 
   useEffect(() => {
     const handleResize = () => updateLayout();

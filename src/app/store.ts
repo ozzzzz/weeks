@@ -83,6 +83,8 @@ const defaultLayoutState: LayoutState = {
     isMenuCollapsed: true,
     focusWeekIndex: null,
     resetView: false,
+    hoveredEventId: null,
+    hoveredPeriodId: null,
 };
 
 const lifeSlice = createSlice({
@@ -235,6 +237,14 @@ const layoutSlice = createSlice({
         },
         setResetView(state, action: PayloadAction<boolean>) {
             state.resetView = action.payload;
+        },
+        setHoveredEvent(state, action: PayloadAction<string | null>) {
+            state.hoveredEventId = action.payload;
+            if (action.payload) state.hoveredPeriodId = null;
+        },
+        setHoveredPeriod(state, action: PayloadAction<string | null>) {
+            state.hoveredPeriodId = action.payload;
+            if (action.payload) state.hoveredEventId = null;
         },
     },
 });

@@ -1,12 +1,16 @@
+import Navigation from './components/Navigation';
 import LifeMenu from './components/LifeMenu';
 import WeeksVisualization from './components/WeeksVisualization';
 
 export default function Home() {
   return (
-    <div className="flex h-[calc(100vh-56px)] w-full overflow-hidden">
-      <LifeMenu />
-      <div className="relative flex-1 overflow-hidden">
-        <WeeksVisualization />
+    <div className="flex h-screen w-full flex-col overflow-hidden">
+      <Navigation />
+      <div className="flex flex-1 overflow-hidden">
+        <LifeMenu />
+        <div className="relative flex-1 overflow-hidden">
+          <WeeksVisualization />
+        </div>
       </div>
     </div>
   );

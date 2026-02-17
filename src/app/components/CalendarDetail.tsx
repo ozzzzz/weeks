@@ -87,9 +87,10 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
               key={event.id}
               justify="space-between"
               wrap="nowrap"
-              className="calendar-item"
               style={{ cursor: 'pointer' }}
               onClick={() => handleFocusEvent(event)}
+              onMouseEnter={() => dispatch(layoutActions.setHoveredEvent(event.id))}
+              onMouseLeave={() => dispatch(layoutActions.setHoveredEvent(null))}
             >
               <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
                 <div
@@ -150,9 +151,10 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
               key={period.id}
               justify="space-between"
               wrap="nowrap"
-              className="calendar-item"
               style={{ cursor: 'pointer' }}
               onClick={() => handleFocusPeriod(period)}
+              onMouseEnter={() => dispatch(layoutActions.setHoveredPeriod(period.id))}
+              onMouseLeave={() => dispatch(layoutActions.setHoveredPeriod(null))}
             >
               <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
                 <div

@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { MantineProvider } from '@mantine/core';
 import { Provider } from 'react-redux';
-import Navigation from './app/components/Navigation';
 import Home from './app/page';
 import { calendarActions, layoutActions, lifeActions, store } from './app/store';
 import { loadPersistedState, savePersistedState } from './app/utils/persistence';
@@ -32,10 +31,7 @@ const App = () => {
   return (
     <Provider store={store}>
       <MantineProvider defaultColorScheme="light">
-        <Navigation />
-        <main>
-          <Home />
-        </main>
+        <Home />
       </MantineProvider>
     </Provider>
   );

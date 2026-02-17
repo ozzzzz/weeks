@@ -18,4 +18,6 @@ export interface LayoutState {
   isMenuCollapsed: boolean;
   focusWeekIndex: number | null;
   resetView: boolean;
+  hoveredEventId: string | null;
+  hoveredPeriodId: string | null;
 }

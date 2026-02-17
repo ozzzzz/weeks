@@ -1,15 +1,12 @@
 'use client';
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { ActionIcon, Button, Divider, Group, NumberInput, ScrollArea, Stack, Tabs, Text, Tooltip } from '@mantine/core';
-import { IconCalendar, IconChevronLeft, IconChevronRight, IconDownload, IconUpload, IconUser, IconDatabase } from '@tabler/icons-react';
+import { IconCalendar, IconChevronLeft, IconChevronRight, IconUser } from '@tabler/icons-react';
 import { calculateAge } from '../utils/dates';
-import { buildWeekOverlays } from '../utils/calendar';
-import { buildWeekPoints } from '../utils/weeks';
 import { buildDemoState } from '../utils/demoData';
 import { calendarActions, lifeActions, layoutActions } from '../store';
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { downloadPersistedState, parsePersistedState } from '../utils/persistence';
 import CalendarList from './CalendarList';
 
 const SIDEBAR_WIDTH = 320;
@@ -17,37 +14,8 @@ const SIDEBAR_WIDTH = 320;
 const LifeMenu = () => {
   const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
-  const calendars = useAppSelector((state) => state.calendar.calendars);
-  const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
   const isMenuCollapsed = useAppSelector((state) => state.layout.isMenuCollapsed);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [importError, setImportError] = useState<string | null>(null);
   const age = calculateAge(lifeProfile.dateOfBirth);
-
-  const weeks = useMemo(() => buildWeekPoints(lifeProfile), [lifeProfile]);
-  const overlays = useMemo(
-    () => buildWeekOverlays(weeks.length, calendars, lifeProfile.dateOfBirth),
-    [weeks.length, calendars, lifeProfile.dateOfBirth],
-  );
-
-  const diagnostics = useMemo(() => {
-    let eventsInRange = 0;
-    let weeksWithPeriods = 0;
-
-    overlays.forEach((overlay) => {
-      eventsInRange += overlay.events.length;
-      if (overlay.periods.length > 0) weeksWithPeriods += 1;
-    });
-
-    const hasCurrentWeek = weeks.some((week) => week.status === 'current');
-
-    return {
-      totalWeeks: weeks.length,
-      eventsInRange,
-      weeksWithPeriods,
-      hasCurrentWeek,
-    };
-  }, [overlays, weeks]);
 
   const handleBirthChange = (field: 'year' | 'month' | 'day') => (value: string | number) => {
     if (typeof value !== 'number') return;
@@ -95,40 +63,6 @@ const LifeMenu = () => {
     dispatch(calendarActions.setCalendars([]));
   };
 
-  const handleDownloadSettings = () => {
-    downloadPersistedState({
-      profile: lifeProfile,
-      calendars,
-      activeCalendarId,
-      isMenuCollapsed,
-    });
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleUploadSettings = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const raw = await file.text();
-    const parsed = parsePersistedState(raw);
-
-    if (!parsed) {
-      setImportError('Invalid settings JSON file');
-      event.target.value = '';
-      return;
-    }
-
-    dispatch(lifeActions.setLifeProfile(parsed.profile));
-    dispatch(calendarActions.setCalendars(parsed.calendars));
-    dispatch(calendarActions.setActiveCalendar(parsed.activeCalendarId));
-    dispatch(layoutActions.setMenuCollapsed(parsed.isMenuCollapsed));
-    setImportError(null);
-    event.target.value = '';
-  };
-
   return (
     <div className="flex h-full flex-shrink-0">
       {/* Sidebar content */}
@@ -139,8 +73,6 @@ const LifeMenu = () => {
         <div style={{ width: SIDEBAR_WIDTH }}>
           <ScrollArea h="100dvh" offsetScrollbars>
             <Stack gap="md" p="md">
-              <Text fw={600}>Life setup</Text>
-
               <Tabs defaultValue="profile">
                 <Tabs.List>
                   <Tabs.Tab value="profile" leftSection={<IconUser size={14} />}>
@@ -148,9 +80,6 @@ const LifeMenu = () => {
                   </Tabs.Tab>
                   <Tabs.Tab value="calendars" leftSection={<IconCalendar size={14} />}>
                     Calendars
-                  </Tabs.Tab>
-                  <Tabs.Tab value="data" leftSection={<IconDatabase size={14} />}>
-                    Data
                   </Tabs.Tab>
                 </Tabs.List>
 
@@ -200,51 +129,6 @@ const LifeMenu = () => {
                     />
 
                     <Text c="dimmed">Current age: {age} years</Text>
-                  </Stack>
-                </Tabs.Panel>
-
-                <Tabs.Panel value="calendars" pt="md">
-                  <CalendarList />
-                </Tabs.Panel>
-
-                <Tabs.Panel value="data" pt="md">
-                  <Stack gap="md">
-                    <Stack gap="xs">
-                      <Text fw={600}>Backup</Text>
-                      <Text size="xs" c="dimmed">
-                        Export and restore your settings as JSON.
-                      </Text>
-                      <Group gap="xs">
-                        <Button
-                          size="xs"
-                          variant="light"
-                          leftSection={<IconDownload size={14} />}
-                          onClick={handleDownloadSettings}
-                        >
-                          Download
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="default"
-                          leftSection={<IconUpload size={14} />}
-                          onClick={handleUploadClick}
-                        >
-                          Upload
-                        </Button>
-                      </Group>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="application/json"
-                        className="hidden"
-                        onChange={handleUploadSettings}
-                      />
-                      {importError && (
-                        <Text size="xs" c="red">
-                          {importError}
-                        </Text>
-                      )}
-                    </Stack>
 
                     <Divider />
 
@@ -263,6 +147,10 @@ const LifeMenu = () => {
                       </Group>
                     </Stack>
                   </Stack>
+                </Tabs.Panel>
+
+                <Tabs.Panel value="calendars" pt="md">
+                  <CalendarList />
                 </Tabs.Panel>
               </Tabs>
             </Stack>
