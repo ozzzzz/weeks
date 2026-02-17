@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Accordion, ActionIcon, Box, Button, Group, Stack, Text, TextInput } from '@mantine/core';
 import { IconPlus, IconTrash, IconEdit, IconCheck, IconX } from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { calendarActions } from '../store';
+import { calendarActions, layoutActions } from '../store';
 import { Calendar } from '../types';
 import CalendarDetail from './CalendarDetail';
 
@@ -78,6 +78,7 @@ const CalendarList = () => {
   const handleAccordionChange = (value: string | null) => {
     if (value) {
       dispatch(calendarActions.setActiveCalendar(value));
+      dispatch(layoutActions.setResetView(true));
     }
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { ActionIcon, Button, Divider, Group, NumberInput, Paper, ScrollArea, Stack, Tabs, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Button, Divider, Group, NumberInput, ScrollArea, Stack, Tabs, Text, Tooltip } from '@mantine/core';
 import { IconCalendar, IconChevronLeft, IconChevronRight, IconDownload, IconUpload, IconUser } from '@tabler/icons-react';
 import { calculateAge } from '../utils/dates';
 import { buildWeekOverlays } from '../utils/calendar';
@@ -130,169 +130,167 @@ const LifeMenu = () => {
   };
 
   return (
-    <div
-      className="relative flex h-full flex-shrink-0 transition-[width] duration-300 ease-in-out"
-      style={{ width: isMenuCollapsed ? 0 : SIDEBAR_WIDTH }}
-    >
-      {/* Toggle button — always visible */}
-      <Tooltip label={isMenuCollapsed ? 'Open settings (Tab)' : 'Close settings (Tab)'} position="right">
+    <div className="flex h-full flex-shrink-0">
+      {/* Sidebar content */}
+      <div
+        className="h-full overflow-hidden border-r border-gray-200 transition-[width] duration-300 ease-in-out"
+        style={{ width: isMenuCollapsed ? 0 : SIDEBAR_WIDTH }}
+      >
+        <div style={{ width: SIDEBAR_WIDTH }}>
+          <ScrollArea h="100dvh" offsetScrollbars>
+            <Stack gap="md" p="md">
+              <Text fw={600}>Life setup</Text>
+
+              <Tabs defaultValue="profile">
+                <Tabs.List>
+                  <Tabs.Tab value="profile" leftSection={<IconUser size={14} />}>
+                    Profile
+                  </Tabs.Tab>
+                  <Tabs.Tab value="calendars" leftSection={<IconCalendar size={14} />}>
+                    Calendars
+                  </Tabs.Tab>
+                </Tabs.List>
+
+                <Tabs.Panel value="profile" pt="md">
+                  <Stack gap="md">
+                    <NumberInput
+                      label="Birth year"
+                      value={lifeProfile.dateOfBirth.year}
+                      min={1900}
+                      max={new Date().getFullYear()}
+                      onChange={handleBirthChange('year')}
+                    />
+
+                    <Group grow>
+                      <NumberInput
+                        label="Birth month"
+                        value={lifeProfile.dateOfBirth.month}
+                        min={1}
+                        max={12}
+                        onChange={handleBirthChange('month')}
+                      />
+                      <NumberInput
+                        label="Birth day"
+                        value={lifeProfile.dateOfBirth.day}
+                        min={1}
+                        max={31}
+                        onChange={handleBirthChange('day')}
+                      />
+                    </Group>
+
+                    <Divider />
+
+                    <NumberInput
+                      label="Life expectancy (years)"
+                      value={lifeProfile.realExpectancyYears}
+                      min={0}
+                      max={100}
+                      onChange={handleRealExpectancyChange}
+                    />
+
+                    <NumberInput
+                      label="Extra years"
+                      value={lifeProfile.extraExpectancyYears}
+                      min={0}
+                      max={100}
+                      onChange={handleExtraExpectancyChange}
+                    />
+
+                    <Text c="dimmed">Current age: {age} years</Text>
+
+                    <Divider />
+
+                    <Stack gap={4}>
+                      <Text fw={600}>Status check</Text>
+                      <Text size="sm" c={diagnostics.totalWeeks > 0 && diagnostics.hasCurrentWeek ? 'green' : 'red'}>
+                        {diagnostics.totalWeeks > 0 && diagnostics.hasCurrentWeek
+                          ? 'OK — weeks calculated'
+                          : 'Check inputs — no valid weeks'}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        Weeks: {diagnostics.totalWeeks} · Events in range: {diagnostics.eventsInRange} · Weeks with periods: {diagnostics.weeksWithPeriods}
+                      </Text>
+                    </Stack>
+                  </Stack>
+                </Tabs.Panel>
+
+                <Tabs.Panel value="calendars" pt="md">
+                  <Stack gap="md">
+                    <CalendarList />
+                    <Divider />
+                    <Stack gap="xs">
+                      <Text fw={600}>Demo data</Text>
+                      <Text size="xs" c="dimmed">
+                        Loads a full set of sample events and periods covering edge cases.
+                      </Text>
+                      <Group gap="xs">
+                        <Button size="xs" variant="light" onClick={handleLoadDemo}>
+                          Load demo data
+                        </Button>
+                        <Button size="xs" variant="subtle" color="red" onClick={handleClearCalendars}>
+                          Clear calendars
+                        </Button>
+                      </Group>
+                    </Stack>
+                    <Divider />
+                    <Stack gap="xs">
+                      <Text fw={600}>Settings backup</Text>
+                      <Text size="xs" c="dimmed">
+                        Export current settings to JSON and restore later from file.
+                      </Text>
+                      <Group gap="xs">
+                        <Button
+                          size="xs"
+                          variant="light"
+                          leftSection={<IconDownload size={14} />}
+                          onClick={handleDownloadSettings}
+                        >
+                          Download JSON
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="default"
+                          leftSection={<IconUpload size={14} />}
+                          onClick={handleUploadClick}
+                        >
+                          Upload JSON
+                        </Button>
+                      </Group>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/json"
+                        className="hidden"
+                        onChange={handleUploadSettings}
+                      />
+                      {importError && (
+                        <Text size="xs" c="red">
+                          {importError}
+                        </Text>
+                      )}
+                    </Stack>
+                  </Stack>
+                </Tabs.Panel>
+              </Tabs>
+            </Stack>
+          </ScrollArea>
+        </div>
+      </div>
+
+      {/* Toggle strip */}
+      <Tooltip label={isMenuCollapsed ? 'Open (Tab)' : 'Close (Tab)'} position="right">
         <ActionIcon
-          size="md"
-          variant="filled"
-          radius="xl"
+          size="lg"
+          variant="subtle"
+          radius={0}
           aria-label={isMenuCollapsed ? 'Expand menu' : 'Collapse menu'}
           onClick={toggleMenu}
-          className="absolute -right-4 top-3 z-40 shadow-md"
-          style={{ transform: 'translateX(100%)' }}
+          className="h-full flex-shrink-0 border-r border-gray-200"
+          style={{ width: 28 }}
         >
           {isMenuCollapsed ? <IconChevronRight size={14} /> : <IconChevronLeft size={14} />}
         </ActionIcon>
       </Tooltip>
-
-      {/* Sidebar content */}
-      <Paper
-        className="h-full overflow-hidden border-r"
-        radius={0}
-        style={{ width: SIDEBAR_WIDTH }}
-      >
-        <ScrollArea h="100%" p="md">
-          <Stack gap="md">
-            <Text fw={600}>Life setup</Text>
-
-            <Tabs defaultValue="profile">
-              <Tabs.List>
-                <Tabs.Tab value="profile" leftSection={<IconUser size={14} />}>
-                  Profile
-                </Tabs.Tab>
-                <Tabs.Tab value="calendars" leftSection={<IconCalendar size={14} />}>
-                  Calendars
-                </Tabs.Tab>
-              </Tabs.List>
-
-              <Tabs.Panel value="profile" pt="md">
-                <Stack gap="md">
-                  <NumberInput
-                    label="Birth year"
-                    value={lifeProfile.dateOfBirth.year}
-                    min={1900}
-                    max={new Date().getFullYear()}
-                    onChange={handleBirthChange('year')}
-                  />
-
-                  <Group grow>
-                    <NumberInput
-                      label="Birth month"
-                      value={lifeProfile.dateOfBirth.month}
-                      min={1}
-                      max={12}
-                      onChange={handleBirthChange('month')}
-                    />
-                    <NumberInput
-                      label="Birth day"
-                      value={lifeProfile.dateOfBirth.day}
-                      min={1}
-                      max={31}
-                      onChange={handleBirthChange('day')}
-                    />
-                  </Group>
-
-                  <Divider />
-
-                  <NumberInput
-                    label="Life expectancy (years)"
-                    value={lifeProfile.realExpectancyYears}
-                    min={0}
-                    max={100}
-                    onChange={handleRealExpectancyChange}
-                  />
-
-                  <NumberInput
-                    label="Extra years"
-                    value={lifeProfile.extraExpectancyYears}
-                    min={0}
-                    max={100}
-                    onChange={handleExtraExpectancyChange}
-                  />
-
-                  <Text c="dimmed">Current age: {age} years</Text>
-
-                  <Divider />
-
-                  <Stack gap={4}>
-                    <Text fw={600}>Status check</Text>
-                    <Text size="sm" c={diagnostics.totalWeeks > 0 && diagnostics.hasCurrentWeek ? 'green' : 'red'}>
-                      {diagnostics.totalWeeks > 0 && diagnostics.hasCurrentWeek
-                        ? 'OK — weeks calculated'
-                        : 'Check inputs — no valid weeks'}
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      Weeks: {diagnostics.totalWeeks} · Events in range: {diagnostics.eventsInRange} · Weeks with periods: {diagnostics.weeksWithPeriods}
-                    </Text>
-                  </Stack>
-                </Stack>
-              </Tabs.Panel>
-
-              <Tabs.Panel value="calendars" pt="md">
-                <Stack gap="md">
-                  <CalendarList />
-                  <Divider />
-                  <Stack gap="xs">
-                    <Text fw={600}>Demo data</Text>
-                    <Text size="xs" c="dimmed">
-                      Loads a full set of sample events and periods covering edge cases.
-                    </Text>
-                    <Group gap="xs">
-                      <Button size="xs" variant="light" onClick={handleLoadDemo}>
-                        Load demo data
-                      </Button>
-                      <Button size="xs" variant="subtle" color="red" onClick={handleClearCalendars}>
-                        Clear calendars
-                      </Button>
-                    </Group>
-                  </Stack>
-                  <Divider />
-                  <Stack gap="xs">
-                    <Text fw={600}>Settings backup</Text>
-                    <Text size="xs" c="dimmed">
-                      Export current settings to JSON and restore later from file.
-                    </Text>
-                    <Group gap="xs">
-                      <Button
-                        size="xs"
-                        variant="light"
-                        leftSection={<IconDownload size={14} />}
-                        onClick={handleDownloadSettings}
-                      >
-                        Download JSON
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="default"
-                        leftSection={<IconUpload size={14} />}
-                        onClick={handleUploadClick}
-                      >
-                        Upload JSON
-                      </Button>
-                    </Group>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="application/json"
-                      className="hidden"
-                      onChange={handleUploadSettings}
-                    />
-                    {importError && (
-                      <Text size="xs" c="red">
-                        {importError}
-                      </Text>
-                    )}
-                  </Stack>
-                </Stack>
-              </Tabs.Panel>
-            </Tabs>
-          </Stack>
-        </ScrollArea>
-      </Paper>
     </div>
   );
 };

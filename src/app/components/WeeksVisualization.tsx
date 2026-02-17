@@ -62,6 +62,7 @@ const WeeksVisualization = () => {
   const calendars = useAppSelector((state) => state.calendar.calendars);
   const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
   const focusWeekIndex = useAppSelector((state) => state.layout.focusWeekIndex);
+  const resetView = useAppSelector((state) => state.layout.resetView);
   const themeState = useAppSelector((state) => state.theme);
   const activeTheme = themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ?? themeState.themes[0];
 
@@ -523,6 +524,29 @@ const WeeksVisualization = () => {
 
     dispatch(layoutActions.setFocusWeek(null));
   }, [focusWeekIndex, dispatch]);
+
+  // Reset view to origin when switching calendars
+  useEffect(() => {
+    if (!resetView) return;
+    const controls = controlsRef.current;
+    const camera = cameraRef.current;
+    if (!controls || !camera) return;
+
+    const endTarget = new THREE.Vector3(0, 0, 0);
+    const offset = camera.position.clone().sub(controls.target);
+
+    focusAnimRef.current = {
+      startTarget: controls.target.clone(),
+      endTarget,
+      startCamPos: camera.position.clone(),
+      endCamPos: endTarget.clone().add(offset),
+      startZoom: camera.zoom,
+      endZoom: 0.88,
+      progress: 0,
+    };
+
+    dispatch(layoutActions.setResetView(false));
+  }, [resetView, dispatch]);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const layout = layoutRef.current;
