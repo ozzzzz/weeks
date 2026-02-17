@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Badge, Group, Paper, Text } from '@mantine/core';
 import { useAppSelector, useAppDispatch } from '../hooks';
 import { layoutActions } from '../store';
 import { buildWeekPoints } from '../utils/weeks';
@@ -525,8 +524,6 @@ const WeeksVisualization = () => {
     dispatch(layoutActions.setFocusWeek(null));
   }, [focusWeekIndex, dispatch]);
 
-  const colorForStatus = (status: WeekStatus) => activeTheme?.weeks[status] ?? '#ccc';
-
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const layout = layoutRef.current;
     const renderer = rendererRef.current;
@@ -586,21 +583,6 @@ const WeeksVisualization = () => {
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
     >
-      <div className="pointer-events-none absolute left-1/2 top-4 z-20 flex -translate-x-1/2 gap-2">
-        <Paper withBorder radius="md" p="xs" className="pointer-events-auto bg-white/80 backdrop-blur">
-          <Group gap="xs">
-            {statusOrder.map((status) => (
-              <Badge key={status} color={colorForStatus(status)} variant="filled">
-                {status} · {statusCounts[status]}
-              </Badge>
-            ))}
-            <Text size="sm" c="dimmed">
-              Total: {weeks.length}
-            </Text>
-          </Group>
-        </Paper>
-      </div>
-
       {hoverInfo && (
         <div
           className="pointer-events-none fixed z-30 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs shadow-md"

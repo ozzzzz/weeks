@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Accordion, ActionIcon, Box, Button, Group, Radio, Stack, Text, TextInput } from '@mantine/core';
+import { Accordion, ActionIcon, Box, Button, Group, Stack, Text, TextInput } from '@mantine/core';
 import { IconPlus, IconTrash, IconEdit, IconCheck, IconX } from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { calendarActions } from '../store';
@@ -75,8 +75,10 @@ const CalendarList = () => {
     setEditingName('');
   };
 
-  const handleSelectCalendar = (calendarId: string) => {
-    dispatch(calendarActions.setActiveCalendar(calendarId));
+  const handleAccordionChange = (value: string | null) => {
+    if (value) {
+      dispatch(calendarActions.setActiveCalendar(value));
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -92,20 +94,17 @@ const CalendarList = () => {
       {calendars.length === 0 ? (
         <Text c="dimmed" size="sm">No calendars yet</Text>
       ) : (
-        <Accordion variant="separated" radius="sm">
+        <Accordion
+          variant="separated"
+          radius="sm"
+          value={activeCalendarId}
+          onChange={handleAccordionChange}
+        >
           {calendars.map((calendar) => (
             <Accordion.Item key={calendar.id} value={calendar.id}>
               <Accordion.Control>
                 <Group justify="space-between" wrap="nowrap" style={{ flex: 1 }}>
                   <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
-                    <Radio
-                      name="activeCalendar"
-                      checked={activeCalendarId === calendar.id}
-                      onChange={() => handleSelectCalendar(calendar.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`Select ${calendar.name}`}
-                      size="xs"
-                    />
                     <Box
                       style={{
                         width: 10,
