@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button, ColorInput, Group, NumberInput, SegmentedControl, Stack, Text, TextInput } from '@mantine/core';
-import { CalendarPeriod } from '../types';
+import { CalendarPeriod, DEFAULT_PERIOD_COLOR } from '../types';
 import { PartialDate } from '../types/common';
 import { partialDateToDate } from '../utils/dates';
 
@@ -18,7 +18,7 @@ const PeriodForm = ({ calendarId, period, onSave, onCancel }: PeriodFormProps) =
   const [label, setLabel] = useState(period?.label ?? '');
   const [start, setStart] = useState<PartialDate>(period?.start ?? { year: currentYear });
   const [end, setEnd] = useState<PartialDate>(period?.end ?? { year: currentYear });
-  const [color, setColor] = useState(period?.color ?? '');
+  const [color, setColor] = useState(period?.color ?? DEFAULT_PERIOD_COLOR);
   const [pattern, setPattern] = useState<'solid' | 'striped'>(period?.pattern ?? 'solid');
   const [error, setError] = useState('');
 
@@ -49,7 +49,7 @@ const PeriodForm = ({ calendarId, period, onSave, onCancel }: PeriodFormProps) =
       label: label.trim(),
       start,
       end,
-      color: color || undefined,
+      color: color || DEFAULT_PERIOD_COLOR,
       pattern,
     };
     onSave(calendarId, newPeriod);
@@ -122,10 +122,9 @@ const PeriodForm = ({ calendarId, period, onSave, onCancel }: PeriodFormProps) =
       </Group>
 
       <ColorInput
-        label="Color (optional)"
+        label="Color"
         value={color}
         onChange={setColor}
-        placeholder="Pick a color"
       />
 
       <Stack gap={4}>

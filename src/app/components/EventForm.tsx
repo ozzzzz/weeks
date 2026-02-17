@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button, ColorInput, Group, NumberInput, Stack, TextInput } from '@mantine/core';
-import { CalendarEvent } from '../types';
+import { CalendarEvent, DEFAULT_EVENT_COLOR } from '../types';
 import { PartialDate } from '../types/common';
 
 interface EventFormProps {
@@ -15,7 +15,7 @@ interface EventFormProps {
 const EventForm = ({ calendarId, event, onSave, onCancel }: EventFormProps) => {
   const [label, setLabel] = useState(event?.label ?? '');
   const [date, setDate] = useState<PartialDate>(event?.date ?? { year: new Date().getFullYear() });
-  const [color, setColor] = useState(event?.color ?? '');
+  const [color, setColor] = useState(event?.color ?? DEFAULT_EVENT_COLOR);
 
   const handleDateChange = (field: 'year' | 'month' | 'day') => (value: string | number) => {
     if (typeof value !== 'number') return;
@@ -29,7 +29,7 @@ const EventForm = ({ calendarId, event, onSave, onCancel }: EventFormProps) => {
       id: event?.id ?? crypto.randomUUID(),
       label: label.trim(),
       date,
-      color: color || undefined,
+      color: color || DEFAULT_EVENT_COLOR,
     };
     onSave(calendarId, newEvent);
   };
@@ -73,10 +73,9 @@ const EventForm = ({ calendarId, event, onSave, onCancel }: EventFormProps) => {
       </Group>
 
       <ColorInput
-        label="Color (optional)"
+        label="Color"
         value={color}
         onChange={setColor}
-        placeholder="Pick a color"
       />
 
       <Group justify="flex-end" mt="sm">

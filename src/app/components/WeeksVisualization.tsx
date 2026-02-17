@@ -8,7 +8,7 @@ import { layoutActions } from '../store';
 import { buildWeekPoints } from '../utils/weeks';
 import { buildWeekOverlays, dateToWeekIndex } from '../utils/calendar';
 import { formatDisplayDate, formatPartialDate } from '../utils/dates';
-import { WeekStatus } from '../types';
+import { WeekStatus, DEFAULT_PERIOD_COLOR } from '../types';
 
 type LayoutInfo = {
   cols: number;
@@ -30,9 +30,6 @@ type HoverInfo = {
 
 const statusOrder: WeekStatus[] = ['lived', 'current', 'remaining', 'extra'];
 
-const DEFAULT_EVENT_COLOR = '#ef4444';
-const DEFAULT_PERIOD_COLOR = '#3b82f6';
-
 const WeeksVisualization = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -50,7 +47,6 @@ const WeeksVisualization = () => {
     remaining: null,
     extra: null,
   });
-  const eventMeshRef = useRef<THREE.InstancedMesh | null>(null);
   const periodMeshesRef = useRef<THREE.InstancedMesh[]>([]);
   const layoutRef = useRef<LayoutInfo | null>(null);
   const didSetInitialZoom = useRef(false);
@@ -103,14 +99,6 @@ const WeeksVisualization = () => {
         .filter((entry): entry is { period: (typeof calendar.periods)[number]; weekIndices: number[] } => !!entry),
     );
   }, [activeCalendars, lifeProfile.dateOfBirth, weeks.length]);
-
-  const overlayStats = useMemo(() => {
-    let eventCount = 0;
-    weekOverlays.forEach((overlay) => {
-      eventCount += overlay.events.length;
-    });
-    return { eventCount };
-  }, [weekOverlays]);
 
   const statusCounts = useMemo(
     () =>
@@ -216,10 +204,6 @@ const WeeksVisualization = () => {
         (mesh.material as THREE.Material).dispose();
         gridGroupRef.current?.remove(mesh);
       });
-      if (eventMeshRef.current) {
-        eventMeshRef.current.geometry.dispose();
-        (eventMeshRef.current.material as THREE.Material).dispose();
-      }
       periodMeshesRef.current.forEach((mesh) => {
         mesh.geometry.dispose();
         (mesh.material as THREE.Material).dispose();
@@ -329,37 +313,6 @@ const WeeksVisualization = () => {
       mesh.instanceMatrix.needsUpdate = true;
     });
 
-    // Position event glow halos (behind week dots)
-    const eventMesh = eventMeshRef.current;
-    if (eventMesh) {
-      let eventIndex = 0;
-      const glowRadius = radius * 1.5;
-
-      for (let weekIndex = 0; weekIndex < weeks.length; weekIndex += 1) {
-        const overlay = weekOverlays.get(weekIndex);
-        if (!overlay || overlay.events.length === 0) continue;
-
-        const col = weekIndex % cols;
-        const row = Math.floor(weekIndex / cols);
-        const x = startX + col * cellSize;
-        const y = startY - row * cellSize;
-
-        dummy.position.set(x, y, -0.04);
-        dummy.scale.set(glowRadius, glowRadius, 1);
-        dummy.updateMatrix();
-        eventMesh.setMatrixAt(eventIndex, dummy.matrix);
-
-        // Set color from first event
-        const color = new THREE.Color(overlay.events[0].color ?? DEFAULT_EVENT_COLOR);
-        eventMesh.setColorAt(eventIndex, color);
-
-        eventIndex += 1;
-      }
-      eventMesh.count = eventIndex;
-      eventMesh.instanceMatrix.needsUpdate = true;
-      if (eventMesh.instanceColor) eventMesh.instanceColor.needsUpdate = true;
-    }
-
     // Position period backgrounds per period (color-locked materials)
     periodMeshesRef.current.forEach((mesh, index) => {
       const instance = periodInstances[index];
@@ -384,7 +337,7 @@ const WeeksVisualization = () => {
     });
 
     controlsRef.current?.update();
-  }, [weeks, statusCounts, weekOverlays]);
+  }, [weeks, statusCounts, periodInstances]);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -412,12 +365,6 @@ const WeeksVisualization = () => {
     });
 
     // Clean up existing overlay meshes
-    if (eventMeshRef.current) {
-      gridGroupRef.current?.remove(eventMeshRef.current);
-      eventMeshRef.current.geometry.dispose();
-      (eventMeshRef.current.material as THREE.Material).dispose();
-      eventMeshRef.current = null;
-    }
     periodMeshesRef.current.forEach((mesh) => {
       gridGroupRef.current?.remove(mesh);
       mesh.geometry.dispose();
@@ -425,28 +372,12 @@ const WeeksVisualization = () => {
     });
     periodMeshesRef.current = [];
 
-    // Create event glow mesh (larger semi-transparent halos behind dots)
-    const maxEvents = Math.max(overlayStats.eventCount, 1);
-    const eventGeometry = new THREE.CircleGeometry(1, 32);
-    const eventMaterial = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.35,
-      depthWrite: false,
-    });
-    const eventMesh = new THREE.InstancedMesh(eventGeometry, eventMaterial, maxEvents);
-    eventMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    eventMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(maxEvents * 3), 3);
-    eventMesh.renderOrder = -0.5;
-    eventMeshRef.current = eventMesh;
-    gridGroupRef.current?.add(eventMesh);
-
     // Create period background meshes, one per period to lock in color
     const backgroundColor = new THREE.Color(activeTheme?.background ?? '#f8fafc');
 
     periodInstances.forEach((instance) => {
       const planeGeometry = new THREE.PlaneGeometry(1, 1);
-      const baseColor = new THREE.Color(instance.period.color ?? DEFAULT_PERIOD_COLOR);
+      const baseColor = new THREE.Color(instance.period.color || DEFAULT_PERIOD_COLOR);
       const tintColor = baseColor.clone().lerp(backgroundColor, 0.35);
       const planeMaterial = new THREE.MeshBasicMaterial({
         color: tintColor,
@@ -466,7 +397,7 @@ const WeeksVisualization = () => {
     });
 
     updateLayout();
-  }, [colorMap, statusCounts, overlayStats, periodInstances, updateLayout]);
+  }, [colorMap, statusCounts, periodInstances, updateLayout]);
 
   useEffect(() => {
     const handleResize = () => updateLayout();
@@ -485,24 +416,9 @@ const WeeksVisualization = () => {
     };
   }, [updateLayout]);
 
-  // Jump camera to focused week (no animation)
+  // Focus week zoom disabled
   useEffect(() => {
     if (focusWeekIndex == null) return;
-    const layout = layoutRef.current;
-    const controls = controlsRef.current;
-    const camera = cameraRef.current;
-    if (!layout || !controls || !camera) return;
-
-    const col = focusWeekIndex % layout.cols;
-    const row = Math.floor(focusWeekIndex / layout.cols);
-    const x = layout.startX + col * layout.cellSize;
-    const y = layout.startY - row * layout.cellSize;
-
-    controls.target.set(x, y, 0);
-    camera.zoom = 1.8;
-    camera.updateProjectionMatrix();
-    controls.update();
-
     dispatch(layoutActions.setFocusWeek(null));
   }, [focusWeekIndex, dispatch]);
 

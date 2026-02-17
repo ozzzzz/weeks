@@ -1,11 +1,14 @@
 import { PartialDate } from "./common";
 
+export const DEFAULT_EVENT_COLOR = '#ef4444'; // red
+export const DEFAULT_PERIOD_COLOR = '#3b82f6'; // blue
+
 export interface CalendarEvent {
   id: string;
   label: string;
   description?: string;
   date: PartialDate;
-  color?: string;
+  color: string;
 }
 
 export interface CalendarPeriod {
@@ -14,7 +17,7 @@ export interface CalendarPeriod {
   description?: string;
   start: PartialDate;
   end: PartialDate;
-  color?: string;
+  color: string;
   pattern?: 'solid' | 'striped';
 }
 

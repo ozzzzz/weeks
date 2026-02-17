@@ -54,6 +54,7 @@ src/
 
 ## TODO
 
+- fix: i don't see the color for the events: it is overlayed by the lived/remaining/etc status
 - fix the problem with scrooling in the calendar settings (could not scroll to the bottom)
 - remove Period/Event and Calendar name from the tooltip on threejs hover
 - make the same icons for periods and events
