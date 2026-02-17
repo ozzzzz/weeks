@@ -172,7 +172,8 @@ const LifeMenu = () => {
                       <Group gap="xs">
                         <Button
                           size="xs"
-                          variant="light"
+                          variant="subtle"
+                          color="dark"
                           onClick={handleLoadDemo}
                         >
                           Load demo

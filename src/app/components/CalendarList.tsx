@@ -185,6 +185,7 @@ const CalendarList = () => {
                         <ActionIcon
                           size="sm"
                           variant="subtle"
+                          color="dark"
                           component="span"
                           role="button"
                           tabIndex={0}
@@ -199,7 +200,7 @@ const CalendarList = () => {
                         <ActionIcon
                           size="sm"
                           variant="subtle"
-                          color="red"
+                          color="dark"
                           component="span"
                           role="button"
                           tabIndex={0}
@@ -226,7 +227,8 @@ const CalendarList = () => {
 
       <Button
         leftSection={<IconPlus size={14} />}
-        variant="light"
+        variant="subtle"
+        color="dark"
         size="xs"
         onClick={handleCreate}
       >

@@ -80,6 +80,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
           <Button
             leftSection={<IconPlus size={12} />}
             variant="subtle"
+            color="dark"
             size="xs"
             onClick={() => setModal({ type: 'event' })}
           >
@@ -118,6 +119,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
                 <ActionIcon
                   size="xs"
                   variant="subtle"
+                  color="dark"
                   onClick={() => setModal({ type: 'event', event })}
                   aria-label="Edit event"
                 >
@@ -126,7 +128,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
                 <ActionIcon
                   size="xs"
                   variant="subtle"
-                  color="red"
+                  color="dark"
                   onClick={() => handleDeleteEvent(event.id)}
                   aria-label="Delete event"
                 >
@@ -144,6 +146,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
           <Button
             leftSection={<IconPlus size={12} />}
             variant="subtle"
+            color="dark"
             size="xs"
             onClick={() => setModal({ type: 'period' })}
           >
@@ -184,6 +187,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
                 <ActionIcon
                   size="xs"
                   variant="subtle"
+                  color="dark"
                   onClick={() => setModal({ type: 'period', period })}
                   aria-label="Edit period"
                 >
@@ -192,7 +196,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
                 <ActionIcon
                   size="xs"
                   variant="subtle"
-                  color="red"
+                  color="dark"
                   onClick={() => handleDeletePeriod(period.id)}
                   aria-label="Delete period"
                 >
