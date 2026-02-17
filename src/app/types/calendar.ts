@@ -6,7 +6,6 @@ export const DEFAULT_PERIOD_COLOR = '#3b82f6'; // blue
 export interface CalendarEvent {
   id: string;
   label: string;
-  description?: string;
   date: PartialDate;
   color: string;
 }
@@ -14,7 +13,6 @@ export interface CalendarEvent {
 export interface CalendarPeriod {
   id: string;
   label: string;
-  description?: string;
   start: PartialDate;
   end: PartialDate;
   color: string;

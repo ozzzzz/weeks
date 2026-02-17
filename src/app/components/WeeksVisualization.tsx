@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { useAppSelector, useAppDispatch } from '../hooks';
-import { layoutActions } from '../store';
-import { buildWeekPoints } from '../utils/weeks';
-import { buildWeekOverlays, dateToWeekIndex } from '../utils/calendar';
-import { formatDisplayDate, formatPartialDate } from '../utils/dates';
-import { WeekStatus, DEFAULT_PERIOD_COLOR } from '../types';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { useAppSelector, useAppDispatch } from "../hooks";
+import { layoutActions } from "../store";
+import { buildWeekPoints } from "../utils/weeks";
+import { buildWeekOverlays, dateToWeekIndex } from "../utils/calendar";
+import { formatDisplayDate, formatPartialDate } from "../utils/dates";
+import { WeekStatus, DEFAULT_PERIOD_COLOR } from "../types";
 
 type LayoutInfo = {
   cols: number;
@@ -28,7 +28,7 @@ type HoverInfo = {
   periods?: string[];
 };
 
-const statusOrder: WeekStatus[] = ['lived', 'current', 'remaining', 'extra'];
+const statusOrder: WeekStatus[] = ["lived", "current", "remaining", "extra"];
 
 const WeeksVisualization = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,16 +50,23 @@ const WeeksVisualization = () => {
   const periodMeshesRef = useRef<THREE.InstancedMesh[]>([]);
   const layoutRef = useRef<LayoutInfo | null>(null);
   const didSetInitialZoom = useRef(false);
-  const lightsRef = useRef<{ ambient: THREE.AmbientLight; directional: THREE.DirectionalLight } | null>(null);
+  const lightsRef = useRef<{
+    ambient: THREE.AmbientLight;
+    directional: THREE.DirectionalLight;
+  } | null>(null);
 
   const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
   const calendars = useAppSelector((state) => state.calendar.calendars);
-  const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
+  const activeCalendarId = useAppSelector(
+    (state) => state.calendar.activeCalendarId,
+  );
   const focusWeekIndex = useAppSelector((state) => state.layout.focusWeekIndex);
   const resetView = useAppSelector((state) => state.layout.resetView);
   const themeState = useAppSelector((state) => state.theme);
-  const activeTheme = themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ?? themeState.themes[0];
+  const activeTheme =
+    themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ??
+    themeState.themes[0];
 
   const weeks = useMemo(() => buildWeekPoints(lifeProfile), [lifeProfile]);
 
@@ -69,8 +76,9 @@ const WeeksVisualization = () => {
   }, [calendars, activeCalendarId]);
 
   const weekOverlays = useMemo(
-    () => buildWeekOverlays(weeks.length, activeCalendars, lifeProfile.dateOfBirth),
-    [weeks.length, activeCalendars, lifeProfile.dateOfBirth]
+    () =>
+      buildWeekOverlays(weeks.length, activeCalendars, lifeProfile.dateOfBirth),
+    [weeks.length, activeCalendars, lifeProfile.dateOfBirth],
   );
 
   const periodInstances = useMemo(() => {
@@ -80,7 +88,10 @@ const WeeksVisualization = () => {
     return activeCalendars.flatMap((calendar) =>
       calendar.periods
         .map((period) => {
-          const startWeek = dateToWeekIndex(period.start, lifeProfile.dateOfBirth);
+          const startWeek = dateToWeekIndex(
+            period.start,
+            lifeProfile.dateOfBirth,
+          );
           const endWeek = dateToWeekIndex(period.end, lifeProfile.dateOfBirth);
           const start = Math.max(0, Math.min(totalWeeks - 1, startWeek));
           const end = Math.max(0, Math.min(totalWeeks - 1, endWeek));
@@ -96,7 +107,14 @@ const WeeksVisualization = () => {
 
           return { period, weekIndices };
         })
-        .filter((entry): entry is { period: (typeof calendar.periods)[number]; weekIndices: number[] } => !!entry),
+        .filter(
+          (
+            entry,
+          ): entry is {
+            period: (typeof calendar.periods)[number];
+            weekIndices: number[];
+          } => !!entry,
+        ),
     );
   }, [activeCalendars, lifeProfile.dateOfBirth, weeks.length]);
 
@@ -114,10 +132,10 @@ const WeeksVisualization = () => {
 
   const colorMap = useMemo(
     () => ({
-      lived: new THREE.Color(activeTheme?.weeks.lived ?? '#1e293b'),
-      current: new THREE.Color(activeTheme?.weeks.current ?? '#22c55e'),
-      remaining: new THREE.Color(activeTheme?.weeks.remaining ?? '#e2e8f0'),
-      extra: new THREE.Color(activeTheme?.weeks.extra ?? '#fcd34d'),
+      lived: new THREE.Color(activeTheme?.weeks.lived ?? "#1e293b"),
+      current: new THREE.Color(activeTheme?.weeks.current ?? "#22c55e"),
+      remaining: new THREE.Color(activeTheme?.weeks.remaining ?? "#e2e8f0"),
+      extra: new THREE.Color(activeTheme?.weeks.extra ?? "#fcd34d"),
     }),
     [activeTheme],
   );
@@ -135,11 +153,11 @@ const WeeksVisualization = () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(container.clientWidth, container.clientHeight, false);
     Object.assign(renderer.domElement.style, {
-      width: '100%',
-      height: '100%',
-      position: 'absolute',
-      inset: '0',
-      display: 'block',
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+      inset: "0",
+      display: "block",
     });
     rendererRef.current = renderer;
     container.appendChild(renderer.domElement);
@@ -182,7 +200,8 @@ const WeeksVisualization = () => {
 
     const render = () => {
       controlsRef.current?.update();
-      if (!rendererRef.current || !cameraRef.current || !sceneRef.current) return;
+      if (!rendererRef.current || !cameraRef.current || !sceneRef.current)
+        return;
       rendererRef.current.render(sceneRef.current, cameraRef.current);
     };
 
@@ -219,7 +238,10 @@ const WeeksVisualization = () => {
 
   useEffect(() => {
     if (rendererRef.current) {
-      rendererRef.current.setClearColor(activeTheme?.background ?? '#f8fafc', 1);
+      rendererRef.current.setClearColor(
+        activeTheme?.background ?? "#f8fafc",
+        1,
+      );
     }
   }, [activeTheme]);
 
@@ -263,7 +285,7 @@ const WeeksVisualization = () => {
     const cols = bestCols;
     const rows = Math.ceil(weeks.length / cols);
     const cellSize = bestCell;
-    const radius = Math.max(1.2, (cellSize * 0.40) / 2);
+    const radius = Math.max(1.2, (cellSize * 0.4) / 2);
     const thickness = Math.max(0.6, radius * 0.3);
     const startX = -((cols * cellSize) / 2) + cellSize / 2;
     const startY = (rows * cellSize) / 2 - cellSize / 2;
@@ -358,7 +380,11 @@ const WeeksVisualization = () => {
     statusOrder.forEach((status) => {
       const geometry = new THREE.CircleGeometry(1, 24);
       const material = new THREE.MeshBasicMaterial({ color: colorMap[status] });
-      const mesh = new THREE.InstancedMesh(geometry, material, Math.max(statusCounts[status], 1));
+      const mesh = new THREE.InstancedMesh(
+        geometry,
+        material,
+        Math.max(statusCounts[status], 1),
+      );
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       meshRefs.current[status] = mesh;
       gridGroupRef.current?.add(mesh);
@@ -373,11 +399,15 @@ const WeeksVisualization = () => {
     periodMeshesRef.current = [];
 
     // Create period background meshes, one per period to lock in color
-    const backgroundColor = new THREE.Color(activeTheme?.background ?? '#f8fafc');
+    const backgroundColor = new THREE.Color(
+      activeTheme?.background ?? "#f8fafc",
+    );
 
     periodInstances.forEach((instance) => {
       const planeGeometry = new THREE.PlaneGeometry(1, 1);
-      const baseColor = new THREE.Color(instance.period.color || DEFAULT_PERIOD_COLOR);
+      const baseColor = new THREE.Color(
+        instance.period.color || DEFAULT_PERIOD_COLOR,
+      );
       const tintColor = baseColor.clone().lerp(backgroundColor, 0.35);
       const planeMaterial = new THREE.MeshBasicMaterial({
         color: tintColor,
@@ -401,9 +431,11 @@ const WeeksVisualization = () => {
 
   useEffect(() => {
     const handleResize = () => updateLayout();
-    const resizeObserver = containerRef.current ? new ResizeObserver(handleResize) : null;
+    const resizeObserver = containerRef.current
+      ? new ResizeObserver(handleResize)
+      : null;
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     if (containerRef.current && resizeObserver) {
       resizeObserver.observe(containerRef.current);
     }
@@ -411,7 +443,7 @@ const WeeksVisualization = () => {
     updateLayout();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       resizeObserver?.disconnect();
     };
   }, [updateLayout]);
@@ -449,7 +481,10 @@ const WeeksVisualization = () => {
     pointerRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
     raycasterRef.current.setFromCamera(pointerRef.current, camera);
-    const intersection = raycasterRef.current.ray.intersectPlane(planeRef.current, intersectionRef.current);
+    const intersection = raycasterRef.current.ray.intersectPlane(
+      planeRef.current,
+      intersectionRef.current,
+    );
     if (!intersection) {
       setHoverInfo(null);
       return;
@@ -460,11 +495,21 @@ const WeeksVisualization = () => {
       gridGroupRef.current.worldToLocal(localPoint);
     }
 
-    const col = Math.floor((localPoint.x - layout.startX + layout.cellSize / 2) / layout.cellSize);
-    const row = Math.floor((layout.startY - localPoint.y + layout.cellSize / 2) / layout.cellSize);
+    const col = Math.floor(
+      (localPoint.x - layout.startX + layout.cellSize / 2) / layout.cellSize,
+    );
+    const row = Math.floor(
+      (layout.startY - localPoint.y + layout.cellSize / 2) / layout.cellSize,
+    );
     const index = row * layout.cols + col;
 
-    if (col < 0 || col >= layout.cols || row < 0 || row >= layout.rows || index >= weeks.length) {
+    if (
+      col < 0 ||
+      col >= layout.cols ||
+      row < 0 ||
+      row >= layout.rows ||
+      index >= weeks.length
+    ) {
       setHoverInfo(null);
       return;
     }
@@ -477,11 +522,11 @@ const WeeksVisualization = () => {
       clientY: event.clientY,
       label: `${formatDisplayDate(week.date)} · ${week.status}`,
       events: overlay?.events.map(
-        (e) => `${e.label} (${e.calendarName}) • ${formatPartialDate(e.date)}`,
+        (e) => `${e.label} ${formatPartialDate(e.date)}`,
       ),
       periods: overlay?.periods.map(
         (p) =>
-          `${p.label} (${p.calendarName}) • ${formatPartialDate(p.start)} → ${formatPartialDate(p.end)}`,
+          `${p.label} ${formatPartialDate(p.start)} → ${formatPartialDate(p.end)}`,
       ),
     });
   };
@@ -506,14 +551,14 @@ const WeeksVisualization = () => {
           {hoverInfo.events && hoverInfo.events.length > 0 && (
             <div className="mt-1 text-red-600">
               {hoverInfo.events.map((e, i) => (
-                <div key={i}>Event: {e}</div>
+                <div key={i}>{e}</div>
               ))}
             </div>
           )}
           {hoverInfo.periods && hoverInfo.periods.length > 0 && (
             <div className="mt-1 text-blue-600">
               {hoverInfo.periods.map((p, i) => (
-                <div key={i}>Period: {p}</div>
+                <div key={i}>{p}</div>
               ))}
             </div>
           )}

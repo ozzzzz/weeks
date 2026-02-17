@@ -1,31 +1,48 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Accordion, ActionIcon, Button, Group, Stack, Text, TextInput } from '@mantine/core';
-import { IconPlus, IconTrash, IconEdit, IconCheck, IconX } from '@tabler/icons-react';
-import { useAppDispatch, useAppSelector } from '../hooks';
-import { calendarActions, layoutActions } from '../store';
-import { Calendar } from '../types';
-import CalendarDetail from './CalendarDetail';
+import { useState } from "react";
+import {
+  Accordion,
+  ActionIcon,
+  Button,
+  Group,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
+import {
+  IconPlus,
+  IconTrash,
+  IconEdit,
+  IconCheck,
+  IconX,
+} from "@tabler/icons-react";
+import { useAppDispatch, useAppSelector } from "../hooks";
+import { calendarActions, layoutActions } from "../store";
+import { Calendar } from "../types";
+import CalendarDetail from "./CalendarDetail";
 
 const CalendarList = () => {
   const dispatch = useAppDispatch();
   const calendars = useAppSelector((state) => state.calendar.calendars);
-  const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
+  const activeCalendarId = useAppSelector(
+    (state) => state.calendar.activeCalendarId,
+  );
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
+  const [editingName, setEditingName] = useState("");
 
-  const handleKeyActivate = (action: () => void) => (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      action();
-    }
-  };
+  const handleKeyActivate =
+    (action: () => void) => (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        action();
+      }
+    };
 
   const handleCreate = () => {
     const newCalendar: Calendar = {
       id: crypto.randomUUID(),
-      name: 'New Calendar',
+      name: "New Calendar",
       events: [],
       periods: [],
     };
@@ -52,19 +69,21 @@ const CalendarList = () => {
 
     const calendar = calendars.find((c) => c.id === editingId);
     if (calendar) {
-      dispatch(calendarActions.upsertCalendar({
-        ...calendar,
-        name: editingName.trim(),
-      }));
+      dispatch(
+        calendarActions.upsertCalendar({
+          ...calendar,
+          name: editingName.trim(),
+        }),
+      );
     }
     setEditingId(null);
-    setEditingName('');
+    setEditingName("");
   };
 
   const handleCancelEdit = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     setEditingId(null);
-    setEditingName('');
+    setEditingName("");
   };
 
   const handleAccordionChange = (value: string | null) => {
@@ -75,9 +94,9 @@ const CalendarList = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSaveEdit();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       handleCancelEdit();
     }
   };
@@ -85,18 +104,25 @@ const CalendarList = () => {
   return (
     <Stack gap="sm">
       {calendars.length === 0 ? (
-        <Text c="dimmed" size="sm">No calendars yet</Text>
+        <Text c="dimmed" size="sm">
+          No calendars yet
+        </Text>
       ) : (
         <Accordion
           variant="separated"
           radius="sm"
           value={activeCalendarId}
           onChange={handleAccordionChange}
+          chevron={null}
         >
           {calendars.map((calendar) => (
             <Accordion.Item key={calendar.id} value={calendar.id}>
               <Accordion.Control>
-                <Group justify="space-between" wrap="nowrap" style={{ flex: 1 }}>
+                <Group
+                  justify="space-between"
+                  wrap="nowrap"
+                  style={{ flex: 1 }}
+                >
                   <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
                     {editingId === calendar.id ? (
                       <TextInput
@@ -109,13 +135,20 @@ const CalendarList = () => {
                         autoFocus
                       />
                     ) : (
-                      <Text size="sm" fw={activeCalendarId === calendar.id ? 600 : 400}>
+                      <Text
+                        size="sm"
+                        fw={activeCalendarId === calendar.id ? 600 : 400}
+                      >
                         {calendar.name}
                       </Text>
                     )}
                   </Group>
 
-                  <Group gap="xs" wrap="nowrap" onClick={(e) => e.stopPropagation()}>
+                  <Group
+                    gap="xs"
+                    wrap="nowrap"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {editingId === calendar.id ? (
                       <>
                         <ActionIcon
@@ -139,7 +172,9 @@ const CalendarList = () => {
                           role="button"
                           tabIndex={0}
                           onClick={handleCancelEdit}
-                          onKeyDown={handleKeyActivate(() => handleCancelEdit())}
+                          onKeyDown={handleKeyActivate(() =>
+                            handleCancelEdit(),
+                          )}
                           aria-label="Cancel"
                         >
                           <IconX size={14} />
@@ -154,7 +189,9 @@ const CalendarList = () => {
                           role="button"
                           tabIndex={0}
                           onClick={(e) => handleStartEdit(calendar, e)}
-                          onKeyDown={handleKeyActivate(() => handleStartEdit(calendar))}
+                          onKeyDown={handleKeyActivate(() =>
+                            handleStartEdit(calendar),
+                          )}
                           aria-label="Edit calendar"
                         >
                           <IconEdit size={14} />
@@ -167,7 +204,9 @@ const CalendarList = () => {
                           role="button"
                           tabIndex={0}
                           onClick={(e) => handleDelete(calendar.id, e)}
-                          onKeyDown={handleKeyActivate(() => handleDelete(calendar.id))}
+                          onKeyDown={handleKeyActivate(() =>
+                            handleDelete(calendar.id),
+                          )}
                           aria-label="Delete calendar"
                         >
                           <IconTrash size={14} />
