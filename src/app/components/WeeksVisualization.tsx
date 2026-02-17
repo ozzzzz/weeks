@@ -318,7 +318,7 @@ const WeeksVisualization = () => {
       const instance = periodInstances[index];
       if (!instance) return;
       const bgWidth = cellSize;
-      const bgHeight = cellSize;
+      const bgHeight = cellSize / 1.8;
 
       instance.weekIndices.forEach((weekIndex, weekOffset) => {
         const col = weekIndex % cols;
