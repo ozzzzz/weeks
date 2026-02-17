@@ -56,9 +56,9 @@ src/
 
 Critical:
 
-- make some animation to select/zoom/gravity weeks on threejs scene when i hover in the sidebar
 - test local storage persistence
 - add page about the app, add buymeacoffee link
+- hovering on remainings is poorly visible
 
 Nice to have:
 
@@ -70,3 +70,8 @@ Nice to have:
 - make the palette with preset colors for events and periods
 - add educational setup for the new user
 - when i hide/show settings tab, threehs scene should be reset (looks not good)
+- fix position with demo data
+
+Minor:
+
+- make animation on hover cooler

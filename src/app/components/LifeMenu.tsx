@@ -97,7 +97,7 @@ const LifeMenu = () => {
         <div style={{ width: SIDEBAR_WIDTH }}>
           <ScrollArea h="100dvh" offsetScrollbars>
             <Stack gap="md" p="md">
-              <Tabs defaultValue="profile" variant="pills">
+              <Tabs defaultValue="profile" variant="pills" color="dark">
                 <Tabs.List>
                   <Tabs.Tab
                     value="profile"

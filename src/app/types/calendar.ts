@@ -16,7 +16,6 @@ export interface CalendarPeriod {
   start: PartialDate;
   end: PartialDate;
   color: string;
-  pattern?: 'solid' | 'striped';
 }
 
 export interface Calendar {

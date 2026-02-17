@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, ColorInput, Group, NumberInput, SegmentedControl, Stack, Text, TextInput } from '@mantine/core';
+import { Button, ColorInput, Group, NumberInput, Stack, Text, TextInput } from '@mantine/core';
 import { CalendarPeriod, DEFAULT_PERIOD_COLOR } from '../types';
 import { PartialDate } from '../types/common';
 import { partialDateToDate } from '../utils/dates';
@@ -19,7 +19,6 @@ const PeriodForm = ({ calendarId, period, onSave, onCancel }: PeriodFormProps) =
   const [start, setStart] = useState<PartialDate>(period?.start ?? { year: currentYear });
   const [end, setEnd] = useState<PartialDate>(period?.end ?? { year: currentYear });
   const [color, setColor] = useState(period?.color ?? DEFAULT_PERIOD_COLOR);
-  const [pattern, setPattern] = useState<'solid' | 'striped'>(period?.pattern ?? 'solid');
   const [error, setError] = useState('');
 
   const handleStartChange = (field: 'year' | 'month' | 'day') => (value: string | number) => {
@@ -50,7 +49,6 @@ const PeriodForm = ({ calendarId, period, onSave, onCancel }: PeriodFormProps) =
       start,
       end,
       color: color || DEFAULT_PERIOD_COLOR,
-      pattern,
     };
     onSave(calendarId, newPeriod);
   };
@@ -126,18 +124,6 @@ const PeriodForm = ({ calendarId, period, onSave, onCancel }: PeriodFormProps) =
         value={color}
         onChange={setColor}
       />
-
-      <Stack gap={4}>
-        <Text size="sm" fw={500}>Pattern</Text>
-        <SegmentedControl
-          value={pattern}
-          onChange={(val) => setPattern(val as 'solid' | 'striped')}
-          data={[
-            { label: 'Solid', value: 'solid' },
-            { label: 'Striped', value: 'striped' },
-      ]}
-    />
-      </Stack>
 
       {error && (
         <Text size="xs" c="red">

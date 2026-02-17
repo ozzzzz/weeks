@@ -80,7 +80,6 @@ export const buildDemoState = (): DemoState => {
           start: makeDate(1990),
           end: makeDate(2002),
           color: '#22c55e',
-          pattern: 'solid',
         },
         {
           id: 'period-school',
@@ -88,7 +87,6 @@ export const buildDemoState = (): DemoState => {
           start: makeDate(2002, 9),
           end: makeDate(2008, 6),
           color: '#3b82f6',
-          pattern: 'striped',
         },
         {
           id: 'period-long-plan',
@@ -96,7 +94,6 @@ export const buildDemoState = (): DemoState => {
           start: makeDate(2060),
           end: makeDate(beyondLifeYear, 12, 31),
           color: '#14b8a6',
-          pattern: 'solid',
         },
       ],
       isVisible: true,
@@ -125,7 +122,6 @@ export const buildDemoState = (): DemoState => {
           start: makeDate(2008),
           end: makeDate(2012),
           color: '#0ea5e9',
-          pattern: 'solid',
         },
         {
           id: 'period-corporate',
@@ -133,7 +129,6 @@ export const buildDemoState = (): DemoState => {
           start: makeDate(2012, 6),
           end: makeDate(2016, 3),
           color: '#1d4ed8',
-          pattern: 'solid',
         },
         {
           id: 'period-startup',
@@ -141,7 +136,6 @@ export const buildDemoState = (): DemoState => {
           start: makeDate(2015, 1),
           end: makeDate(2019, 12),
           color: '#9333ea',
-          pattern: 'striped',
         },
       ],
       isVisible: true,
