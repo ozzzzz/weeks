@@ -8,7 +8,11 @@ import { layoutActions } from "../store";
 import { buildWeekPoints } from "../utils/weeks";
 import { buildWeekOverlays, dateToWeekIndex } from "../utils/calendar";
 import { formatDisplayDate, formatPartialDate } from "../utils/dates";
-import { WeekStatus, DEFAULT_EVENT_COLOR, DEFAULT_PERIOD_COLOR } from "../types";
+import {
+  WeekStatus,
+  DEFAULT_EVENT_COLOR,
+  DEFAULT_PERIOD_COLOR,
+} from "../types";
 
 type LayoutInfo = {
   cols: number;
@@ -29,6 +33,7 @@ type HoverInfo = {
 };
 
 const statusOrder: WeekStatus[] = ["lived", "current", "remaining", "extra"];
+const EVENT_SCALE_MULTIPLIER = 2.0;
 
 const WeeksVisualization = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -135,10 +140,12 @@ const WeeksVisualization = () => {
       colorToWeekIndices.set(key, [weekIndex]);
     });
 
-    return Array.from(colorToWeekIndices.entries()).map(([color, weekIndices]) => ({
-      color,
-      weekIndices,
-    }));
+    return Array.from(colorToWeekIndices.entries()).map(
+      ([color, weekIndices]) => ({
+        color,
+        weekIndices,
+      }),
+    );
   }, [weekOverlays]);
 
   const statusCounts = useMemo(
@@ -399,7 +406,11 @@ const WeeksVisualization = () => {
         const y = startY - row * cellSize;
 
         dummy.position.set(x, y, 0.02);
-        dummy.scale.set(radius, radius, thickness);
+        dummy.scale.set(
+          radius * EVENT_SCALE_MULTIPLIER,
+          radius * EVENT_SCALE_MULTIPLIER,
+          thickness,
+        );
         dummy.updateMatrix();
         mesh.setMatrixAt(weekOffset, dummy.matrix);
       });
