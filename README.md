@@ -56,8 +56,9 @@ src/
 
 Critical:
 
-- show events in the weeks
+- show events in the weeks: change the color of the week circle to use the color from the event
 - make some animation to select/zoom/gravity weeks on threejs scene when i hover in the sidebar
+- test local storage persistence
 
 Nice to have:
 

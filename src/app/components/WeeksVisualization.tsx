@@ -8,7 +8,7 @@ import { layoutActions } from "../store";
 import { buildWeekPoints } from "../utils/weeks";
 import { buildWeekOverlays, dateToWeekIndex } from "../utils/calendar";
 import { formatDisplayDate, formatPartialDate } from "../utils/dates";
-import { WeekStatus, DEFAULT_PERIOD_COLOR } from "../types";
+import { WeekStatus, DEFAULT_EVENT_COLOR, DEFAULT_PERIOD_COLOR } from "../types";
 
 type LayoutInfo = {
   cols: number;
@@ -48,6 +48,7 @@ const WeeksVisualization = () => {
     extra: null,
   });
   const periodMeshesRef = useRef<THREE.InstancedMesh[]>([]);
+  const eventMeshesRef = useRef<THREE.InstancedMesh[]>([]);
   const layoutRef = useRef<LayoutInfo | null>(null);
   const didSetInitialZoom = useRef(false);
   const lightsRef = useRef<{
@@ -117,6 +118,28 @@ const WeeksVisualization = () => {
         ),
     );
   }, [activeCalendars, lifeProfile.dateOfBirth, weeks.length]);
+
+  const eventInstances = useMemo(() => {
+    const colorToWeekIndices = new Map<string, number[]>();
+
+    weekOverlays.forEach((overlay, weekIndex) => {
+      if (overlay.events.length === 0) return;
+      const latestEvent = overlay.events[overlay.events.length - 1];
+      const color = latestEvent?.color || DEFAULT_EVENT_COLOR;
+      const key = color.trim() || DEFAULT_EVENT_COLOR;
+      const existing = colorToWeekIndices.get(key);
+      if (existing) {
+        existing.push(weekIndex);
+        return;
+      }
+      colorToWeekIndices.set(key, [weekIndex]);
+    });
+
+    return Array.from(colorToWeekIndices.entries()).map(([color, weekIndices]) => ({
+      color,
+      weekIndices,
+    }));
+  }, [weekOverlays]);
 
   const statusCounts = useMemo(
     () =>
@@ -229,6 +252,12 @@ const WeeksVisualization = () => {
         gridGroupRef.current?.remove(mesh);
       });
       periodMeshesRef.current = [];
+      eventMeshesRef.current.forEach((mesh) => {
+        mesh.geometry.dispose();
+        (mesh.material as THREE.Material).dispose();
+        gridGroupRef.current?.remove(mesh);
+      });
+      eventMeshesRef.current = [];
       renderer.dispose();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
@@ -358,8 +387,29 @@ const WeeksVisualization = () => {
       mesh.instanceMatrix.needsUpdate = true;
     });
 
+    // Position event overlays (one mesh per event color)
+    eventMeshesRef.current.forEach((mesh, index) => {
+      const instance = eventInstances[index];
+      if (!instance) return;
+
+      instance.weekIndices.forEach((weekIndex, weekOffset) => {
+        const col = weekIndex % cols;
+        const row = Math.floor(weekIndex / cols);
+        const x = startX + col * cellSize;
+        const y = startY - row * cellSize;
+
+        dummy.position.set(x, y, 0.02);
+        dummy.scale.set(radius, radius, thickness);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(weekOffset, dummy.matrix);
+      });
+
+      mesh.count = instance.weekIndices.length;
+      mesh.instanceMatrix.needsUpdate = true;
+    });
+
     controlsRef.current?.update();
-  }, [weeks, statusCounts, periodInstances]);
+  }, [weeks, statusCounts, periodInstances, eventInstances]);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -391,6 +441,13 @@ const WeeksVisualization = () => {
     });
 
     // Clean up existing overlay meshes
+    eventMeshesRef.current.forEach((mesh) => {
+      gridGroupRef.current?.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    });
+    eventMeshesRef.current = [];
+
     periodMeshesRef.current.forEach((mesh) => {
       gridGroupRef.current?.remove(mesh);
       mesh.geometry.dispose();
@@ -426,8 +483,22 @@ const WeeksVisualization = () => {
       gridGroupRef.current?.add(mesh);
     });
 
+    // Create event overlays, grouped by color so event weeks can override base week color
+    eventInstances.forEach((instance) => {
+      const geometry = new THREE.CircleGeometry(1, 24);
+      const material = new THREE.MeshBasicMaterial({ color: instance.color });
+      const mesh = new THREE.InstancedMesh(
+        geometry,
+        material,
+        Math.max(instance.weekIndices.length, 1),
+      );
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      eventMeshesRef.current.push(mesh);
+      gridGroupRef.current?.add(mesh);
+    });
+
     updateLayout();
-  }, [colorMap, statusCounts, periodInstances, updateLayout]);
+  }, [colorMap, statusCounts, periodInstances, eventInstances, updateLayout]);
 
   useEffect(() => {
     const handleResize = () => updateLayout();
