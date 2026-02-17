@@ -114,7 +114,7 @@ const LifeMenu = () => {
                 </Tabs.List>
 
                 <Tabs.Panel value="profile" pt="md">
-                  <Stack gap="md">
+                  <Stack gap="xs">
                     <NumberInput
                       label="Birth year"
                       value={lifeProfile.dateOfBirth.year}
@@ -140,6 +140,10 @@ const LifeMenu = () => {
                       />
                     </Group>
 
+                    <Text size="sm" c="dimmed">
+                      Current age: {age} years
+                    </Text>
+
                     <Divider />
 
                     <NumberInput
@@ -157,8 +161,6 @@ const LifeMenu = () => {
                       max={100}
                       onChange={handleExtraExpectancyChange}
                     />
-
-                    <Text c="dimmed">Current age: {age} years</Text>
 
                     <Divider />
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActionIcon, Button, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
 import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../hooks';
@@ -24,6 +24,13 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
   const dispatch = useAppDispatch();
   const birthDate = useAppSelector((state) => state.life.profile.dateOfBirth);
   const [modal, setModal] = useState<ModalMode>({ type: 'none' });
+
+  useEffect(() => {
+    return () => {
+      dispatch(layoutActions.setHoveredEvent(null));
+      dispatch(layoutActions.setHoveredPeriod(null));
+    };
+  }, [dispatch]);
 
   const sortedEvents = useMemo(() => {
     return [...calendar.events].sort(
