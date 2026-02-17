@@ -32,7 +32,7 @@ type HoverInfo = {
   periods?: string[];
 };
 
-const statusOrder: WeekStatus[] = ["lived", "current", "remaining", "extra"];
+const statusOrder: WeekStatus[] = ["lived", "remaining", "extra"];
 const EVENT_SCALE_MULTIPLIER = 2.0;
 
 const WeeksVisualization = () => {

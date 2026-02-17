@@ -1,34 +1,58 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { ActionIcon, Button, Divider, Group, NumberInput, ScrollArea, Stack, Tabs, Text, Tooltip } from '@mantine/core';
-import { IconCalendar, IconChevronLeft, IconChevronRight, IconUser } from '@tabler/icons-react';
-import { calculateAge } from '../utils/dates';
-import { buildDemoState } from '../utils/demoData';
-import { calendarActions, lifeActions, layoutActions } from '../store';
-import { useAppDispatch, useAppSelector } from '../hooks';
-import CalendarList from './CalendarList';
+import { useEffect } from "react";
+import {
+  ActionIcon,
+  Button,
+  Divider,
+  Group,
+  NumberInput,
+  ScrollArea,
+  Stack,
+  Tabs,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import {
+  IconCalendar,
+  IconChevronLeft,
+  IconChevronRight,
+  IconUser,
+} from "@tabler/icons-react";
+import { calculateAge } from "../utils/dates";
+import { buildDemoState } from "../utils/demoData";
+import { calendarActions, lifeActions, layoutActions } from "../store";
+import { useAppDispatch, useAppSelector } from "../hooks";
+import CalendarList from "./CalendarList";
 
 const SIDEBAR_WIDTH = 320;
 
 const LifeMenu = () => {
   const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
-  const isMenuCollapsed = useAppSelector((state) => state.layout.isMenuCollapsed);
+  const isMenuCollapsed = useAppSelector(
+    (state) => state.layout.isMenuCollapsed,
+  );
   const age = calculateAge(lifeProfile.dateOfBirth);
 
-  const handleBirthChange = (field: 'year' | 'month' | 'day') => (value: string | number) => {
-    if (typeof value !== 'number') return;
-    dispatch(lifeActions.setDateOfBirth({ ...lifeProfile.dateOfBirth, [field]: value }));
-  };
+  const handleBirthChange =
+    (field: "year" | "month" | "day") => (value: string | number) => {
+      if (typeof value !== "number") return;
+      dispatch(
+        lifeActions.setDateOfBirth({
+          ...lifeProfile.dateOfBirth,
+          [field]: value,
+        }),
+      );
+    };
 
   const handleRealExpectancyChange = (value: string | number) => {
-    if (typeof value !== 'number') return;
+    if (typeof value !== "number") return;
     dispatch(lifeActions.setRealExpectancyYears(value));
   };
 
   const handleExtraExpectancyChange = (value: string | number) => {
-    if (typeof value !== 'number') return;
+    if (typeof value !== "number") return;
     dispatch(lifeActions.setExtraExpectancyYears(value));
   };
 
@@ -41,14 +65,14 @@ const LifeMenu = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't toggle if user is typing in an input
       const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      if (e.key === 'Tab') {
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "Tab") {
         e.preventDefault();
         dispatch(layoutActions.toggleMenu());
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [dispatch]);
 
   const handleLoadDemo = () => {
@@ -75,10 +99,16 @@ const LifeMenu = () => {
             <Stack gap="md" p="md">
               <Tabs defaultValue="profile" variant="pills">
                 <Tabs.List>
-                  <Tabs.Tab value="profile" leftSection={<IconUser size={14} />}>
+                  <Tabs.Tab
+                    value="profile"
+                    leftSection={<IconUser size={14} />}
+                  >
                     Profile
                   </Tabs.Tab>
-                  <Tabs.Tab value="calendars" leftSection={<IconCalendar size={14} />}>
+                  <Tabs.Tab
+                    value="calendars"
+                    leftSection={<IconCalendar size={14} />}
+                  >
                     Calendars
                   </Tabs.Tab>
                 </Tabs.List>
@@ -90,7 +120,7 @@ const LifeMenu = () => {
                       value={lifeProfile.dateOfBirth.year}
                       min={1900}
                       max={new Date().getFullYear()}
-                      onChange={handleBirthChange('year')}
+                      onChange={handleBirthChange("year")}
                     />
 
                     <Group grow>
@@ -99,14 +129,14 @@ const LifeMenu = () => {
                         value={lifeProfile.dateOfBirth.month}
                         min={1}
                         max={12}
-                        onChange={handleBirthChange('month')}
+                        onChange={handleBirthChange("month")}
                       />
                       <NumberInput
                         label="Birth day"
                         value={lifeProfile.dateOfBirth.day}
                         min={1}
                         max={31}
-                        onChange={handleBirthChange('day')}
+                        onChange={handleBirthChange("day")}
                       />
                     </Group>
 
@@ -121,7 +151,7 @@ const LifeMenu = () => {
                     />
 
                     <NumberInput
-                      label="Extra years"
+                      label="Extra years (up to 100 in total)"
                       value={lifeProfile.extraExpectancyYears}
                       min={0}
                       max={100}
@@ -138,10 +168,19 @@ const LifeMenu = () => {
                         Load sample data or clear calendars.
                       </Text>
                       <Group gap="xs">
-                        <Button size="xs" variant="light" onClick={handleLoadDemo}>
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={handleLoadDemo}
+                        >
                           Load demo
                         </Button>
-                        <Button size="xs" variant="subtle" color="red" onClick={handleClearCalendars}>
+                        <Button
+                          size="xs"
+                          variant="subtle"
+                          color="red"
+                          onClick={handleClearCalendars}
+                        >
                           Clear all
                         </Button>
                       </Group>
@@ -159,17 +198,24 @@ const LifeMenu = () => {
       </div>
 
       {/* Toggle strip */}
-      <Tooltip label={isMenuCollapsed ? 'Open (Tab)' : 'Close (Tab)'} position="right">
+      <Tooltip
+        label={isMenuCollapsed ? "Open (Tab)" : "Close (Tab)"}
+        position="right"
+      >
         <ActionIcon
           size="lg"
           variant="subtle"
           radius={0}
-          aria-label={isMenuCollapsed ? 'Expand menu' : 'Collapse menu'}
+          aria-label={isMenuCollapsed ? "Expand menu" : "Collapse menu"}
           onClick={toggleMenu}
           className="h-full flex-shrink-0 border-r border-gray-200"
           style={{ width: 28 }}
         >
-          {isMenuCollapsed ? <IconChevronRight size={14} /> : <IconChevronLeft size={14} />}
+          {isMenuCollapsed ? (
+            <IconChevronRight size={14} />
+          ) : (
+            <IconChevronLeft size={14} />
+          )}
         </ActionIcon>
       </Tooltip>
     </div>

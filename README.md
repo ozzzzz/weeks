@@ -56,9 +56,9 @@ src/
 
 Critical:
 
-- show events in the weeks: change the color of the week circle to use the color from the event
 - make some animation to select/zoom/gravity weeks on threejs scene when i hover in the sidebar
 - test local storage persistence
+- add page about the app, add buymeacoffee link
 
 Nice to have:
 
@@ -67,3 +67,6 @@ Nice to have:
 - fix the problem with scrooling in the calendar settings (could not scroll to the bottom)
 - remove Period/Event and Calendar name from the tooltip on threejs hover
 - make the same icons for periods and events
+- make the palette with preset colors for events and periods
+- add educational setup for the new user
+- when i hide/show settings tab, threehs scene should be reset (looks not good)

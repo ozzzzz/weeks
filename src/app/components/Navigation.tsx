@@ -9,7 +9,7 @@ import { WeekStatus } from '../types';
 import { calendarActions, layoutActions, lifeActions } from '../store';
 import { downloadPersistedState, parsePersistedState } from '../utils/persistence';
 
-const statusOrder: WeekStatus[] = ['lived', 'current', 'remaining', 'extra'];
+const statusOrder: WeekStatus[] = ['lived', 'remaining', 'extra'];
 
 const Navigation = () => {
   const dispatch = useAppDispatch();

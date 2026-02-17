@@ -6,8 +6,7 @@ const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 const WEEKS_PER_YEAR = 52;
 
 const getWeekStatus = (index: number, livedWeeks: number, realWeeks: number): WeekStatus => {
-  if (index < livedWeeks) return 'lived';
-  if (index === livedWeeks) return 'current';
+  if (index <= livedWeeks) return 'lived';
   if (index < realWeeks) return 'remaining';
   return 'extra';
 };
