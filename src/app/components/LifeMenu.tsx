@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionIcon, Button, Divider, Group, NumberInput, ScrollArea, Stack, Tabs, Text, Tooltip } from '@mantine/core';
-import { IconCalendar, IconChevronLeft, IconChevronRight, IconDownload, IconUpload, IconUser } from '@tabler/icons-react';
+import { IconCalendar, IconChevronLeft, IconChevronRight, IconDownload, IconUpload, IconUser, IconDatabase } from '@tabler/icons-react';
 import { calculateAge } from '../utils/dates';
 import { buildWeekOverlays } from '../utils/calendar';
 import { buildWeekPoints } from '../utils/weeks';
@@ -149,6 +149,9 @@ const LifeMenu = () => {
                   <Tabs.Tab value="calendars" leftSection={<IconCalendar size={14} />}>
                     Calendars
                   </Tabs.Tab>
+                  <Tabs.Tab value="data" leftSection={<IconDatabase size={14} />}>
+                    Data
+                  </Tabs.Tab>
                 </Tabs.List>
 
                 <Tabs.Panel value="profile" pt="md">
@@ -197,34 +200,19 @@ const LifeMenu = () => {
                     />
 
                     <Text c="dimmed">Current age: {age} years</Text>
-
-                    <Divider />
                   </Stack>
                 </Tabs.Panel>
 
                 <Tabs.Panel value="calendars" pt="md">
+                  <CalendarList />
+                </Tabs.Panel>
+
+                <Tabs.Panel value="data" pt="md">
                   <Stack gap="md">
-                    <CalendarList />
-                    <Divider />
                     <Stack gap="xs">
-                      <Text fw={600}>Demo data</Text>
+                      <Text fw={600}>Backup</Text>
                       <Text size="xs" c="dimmed">
-                        Loads a full set of sample events and periods covering edge cases.
-                      </Text>
-                      <Group gap="xs">
-                        <Button size="xs" variant="light" onClick={handleLoadDemo}>
-                          Load demo data
-                        </Button>
-                        <Button size="xs" variant="subtle" color="red" onClick={handleClearCalendars}>
-                          Clear calendars
-                        </Button>
-                      </Group>
-                    </Stack>
-                    <Divider />
-                    <Stack gap="xs">
-                      <Text fw={600}>Settings backup</Text>
-                      <Text size="xs" c="dimmed">
-                        Export current settings to JSON and restore later from file.
+                        Export and restore your settings as JSON.
                       </Text>
                       <Group gap="xs">
                         <Button
@@ -233,7 +221,7 @@ const LifeMenu = () => {
                           leftSection={<IconDownload size={14} />}
                           onClick={handleDownloadSettings}
                         >
-                          Download JSON
+                          Download
                         </Button>
                         <Button
                           size="xs"
@@ -241,7 +229,7 @@ const LifeMenu = () => {
                           leftSection={<IconUpload size={14} />}
                           onClick={handleUploadClick}
                         >
-                          Upload JSON
+                          Upload
                         </Button>
                       </Group>
                       <input
@@ -256,6 +244,23 @@ const LifeMenu = () => {
                           {importError}
                         </Text>
                       )}
+                    </Stack>
+
+                    <Divider />
+
+                    <Stack gap="xs">
+                      <Text fw={600}>Demo</Text>
+                      <Text size="xs" c="dimmed">
+                        Load sample data or clear calendars.
+                      </Text>
+                      <Group gap="xs">
+                        <Button size="xs" variant="light" onClick={handleLoadDemo}>
+                          Load demo
+                        </Button>
+                        <Button size="xs" variant="subtle" color="red" onClick={handleClearCalendars}>
+                          Clear all
+                        </Button>
+                      </Group>
                     </Stack>
                   </Stack>
                 </Tabs.Panel>

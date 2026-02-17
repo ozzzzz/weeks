@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+@keyframes pulse-bg {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+}
+
+.calendar-item {
+  transition: background-color 0.2s ease;
+  border-radius: 4px;
+  padding: 4px;
+  margin: -4px;
+}
+
+.calendar-item:hover {
+  animation: pulse-bg 1.5s ease-in-out infinite;
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ActionIcon, Button, Group, Modal, Stack, Text } from '@mantine/core';
+import { ActionIcon, Button, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
 import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { calendarActions, layoutActions } from '../store';
@@ -87,6 +87,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
               key={event.id}
               justify="space-between"
               wrap="nowrap"
+              className="calendar-item"
               style={{ cursor: 'pointer' }}
               onClick={() => handleFocusEvent(event)}
             >
@@ -100,7 +101,9 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
                     flexShrink: 0,
                   }}
                 />
-                <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{event.label}</Text>
+                <Tooltip label={event.label} openDelay={300}>
+                  <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{event.label}</Text>
+                </Tooltip>
                 <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>{formatPartialDate(event.date)}</Text>
               </Group>
               <Group gap={4} wrap="nowrap" onClick={(e) => e.stopPropagation()}>
@@ -147,6 +150,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
               key={period.id}
               justify="space-between"
               wrap="nowrap"
+              className="calendar-item"
               style={{ cursor: 'pointer' }}
               onClick={() => handleFocusPeriod(period)}
             >
@@ -160,7 +164,9 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
                     flexShrink: 0,
                   }}
                 />
-                <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{period.label}</Text>
+                <Tooltip label={period.label} openDelay={300}>
+                  <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{period.label}</Text>
+                </Tooltip>
                 <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
                   {formatPartialDate(period.start)} — {formatPartialDate(period.end)}
                 </Text>
