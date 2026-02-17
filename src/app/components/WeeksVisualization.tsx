@@ -429,6 +429,7 @@ const WeeksVisualization = () => {
     const camera = cameraRef.current;
     if (!controls || !camera) return;
 
+    camera.position.set(0, 0, 10);
     controls.target.set(0, 0, 0);
     camera.zoom = 0.88;
     camera.updateProjectionMatrix();
