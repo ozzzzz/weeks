@@ -73,7 +73,7 @@ const LifeMenu = () => {
         <div style={{ width: SIDEBAR_WIDTH }}>
           <ScrollArea h="100dvh" offsetScrollbars>
             <Stack gap="md" p="md">
-              <Tabs defaultValue="profile">
+              <Tabs defaultValue="profile" variant="pills">
                 <Tabs.List>
                   <Tabs.Tab value="profile" leftSection={<IconUser size={14} />}>
                     Profile
