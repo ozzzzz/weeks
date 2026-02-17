@@ -34,7 +34,7 @@ export const buildDemoState = (): DemoState => {
   const calendars: Calendar[] = [
     {
       id: 'calendar-personal',
-      name: 'Personal',
+      name: 'Personal ✨',
       events: [
         {
           id: 'event-born',
@@ -103,7 +103,7 @@ export const buildDemoState = (): DemoState => {
     },
     {
       id: 'calendar-career',
-      name: 'Career',
+      name: 'Career 💼',
       events: [
         {
           id: 'event-first-job',
@@ -141,58 +141,6 @@ export const buildDemoState = (): DemoState => {
           start: makeDate(2015, 1),
           end: makeDate(2019, 12),
           color: '#9333ea',
-          pattern: 'striped',
-        },
-      ],
-      isVisible: true,
-    },
-    {
-      id: 'calendar-family',
-      name: 'Family',
-      events: [
-        {
-          id: 'event-wedding',
-          label: 'Wedding',
-          date: makeDate(2014, 8, 23),
-          color: '#f472b6',
-        },
-        {
-          id: 'event-child',
-          label: 'Child born',
-          date: makeDate(2018, 4, 9),
-          color: '#fb7185',
-        },
-      ],
-      periods: [
-        {
-          id: 'period-parenting',
-          label: 'Parenting journey',
-          start: makeDate(2018, 4, 9),
-          end: makeDate(2038, 4, 9),
-          color: '#f97316',
-          pattern: 'solid',
-        },
-      ],
-      isVisible: true,
-    },
-    {
-      id: 'calendar-health',
-      name: 'Health',
-      events: [
-        {
-          id: 'event-injury',
-          label: 'Minor injury',
-          date: makeDate(2020, 2, 15),
-          color: '#ef4444',
-        },
-      ],
-      periods: [
-        {
-          id: 'period-training',
-          label: 'Marathon training (short)',
-          start: makeDate(2020, 1, 1),
-          end: makeDate(2020, 3, 1),
-          color: '#f43f5e',
           pattern: 'striped',
         },
       ],

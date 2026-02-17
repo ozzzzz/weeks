@@ -199,18 +199,6 @@ const LifeMenu = () => {
                     <Text c="dimmed">Current age: {age} years</Text>
 
                     <Divider />
-
-                    <Stack gap={4}>
-                      <Text fw={600}>Status check</Text>
-                      <Text size="sm" c={diagnostics.totalWeeks > 0 && diagnostics.hasCurrentWeek ? 'green' : 'red'}>
-                        {diagnostics.totalWeeks > 0 && diagnostics.hasCurrentWeek
-                          ? 'OK — weeks calculated'
-                          : 'Check inputs — no valid weeks'}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        Weeks: {diagnostics.totalWeeks} · Events in range: {diagnostics.eventsInRange} · Weeks with periods: {diagnostics.weeksWithPeriods}
-                      </Text>
-                    </Stack>
                   </Stack>
                 </Tabs.Panel>
 
