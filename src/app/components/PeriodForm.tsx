@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button, ColorInput, Group, NumberInput, Stack, Text, TextInput } from '@mantine/core';
 import { CalendarPeriod, DEFAULT_PERIOD_COLOR } from '../types';
 import { PartialDate } from '../types/common';
+import { PERIOD_COLOR_PRESET } from '../utils/colors';
 import { partialDateToDate } from '../utils/dates';
 
 interface PeriodFormProps {
@@ -123,6 +124,8 @@ const PeriodForm = ({ calendarId, period, onSave, onCancel }: PeriodFormProps) =
         label="Color"
         value={color}
         onChange={setColor}
+        swatches={PERIOD_COLOR_PRESET}
+        swatchesPerRow={9}
       />
 
       {error && (

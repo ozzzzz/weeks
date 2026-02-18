@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button, ColorInput, Group, NumberInput, Stack, TextInput } from '@mantine/core';
 import { CalendarEvent, DEFAULT_EVENT_COLOR } from '../types';
 import { PartialDate } from '../types/common';
+import { EVENT_COLOR_PRESET } from '../utils/colors';
 
 interface EventFormProps {
   calendarId: string;
@@ -76,6 +77,8 @@ const EventForm = ({ calendarId, event, onSave, onCancel }: EventFormProps) => {
         label="Color"
         value={color}
         onChange={setColor}
+        swatches={EVENT_COLOR_PRESET}
+        swatchesPerRow={9}
       />
 
       <Group justify="flex-end" mt="sm">

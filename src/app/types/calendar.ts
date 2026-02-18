@@ -1,7 +1,7 @@
 import { PartialDate } from "./common";
 
 export const DEFAULT_EVENT_COLOR = '#ef4444'; // red
-export const DEFAULT_PERIOD_COLOR = '#3b82f6'; // blue
+export const DEFAULT_PERIOD_COLOR = '#fca5a5'; // pastel red
 
 export interface CalendarEvent {
   id: string;
