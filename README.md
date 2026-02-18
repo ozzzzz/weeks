@@ -62,7 +62,6 @@ Critical:
 
 Nice to have:
 
-- update tab open/close icon
 - remove unnecessary lines
 - fix the problem with scrooling in the calendar settings (could not scroll to the bottom)
 - remove Period/Event and Calendar name from the tooltip on threejs hover

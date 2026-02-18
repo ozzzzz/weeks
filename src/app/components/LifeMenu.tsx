@@ -88,10 +88,12 @@ const LifeMenu = () => {
   };
 
   return (
-    <div className="flex h-full flex-shrink-0">
+    <div className="relative flex h-full flex-shrink-0">
       {/* Sidebar content */}
       <div
-        className="h-full overflow-hidden border-r border-gray-200 transition-[width] duration-300 ease-in-out"
+        className={`h-full overflow-hidden transition-[width] duration-300 ease-in-out ${
+          isMenuCollapsed ? "" : "border-r border-gray-200"
+        }`}
         style={{ width: isMenuCollapsed ? 0 : SIDEBAR_WIDTH }}
       >
         <div style={{ width: SIDEBAR_WIDTH }}>
@@ -200,19 +202,18 @@ const LifeMenu = () => {
         </div>
       </div>
 
-      {/* Toggle strip */}
+      {/* Toggle button */}
       <Tooltip
         label={isMenuCollapsed ? "Open (Tab)" : "Close (Tab)"}
         position="right"
       >
         <ActionIcon
-          size="lg"
-          variant="subtle"
-          radius={0}
+          size={30}
+          variant="default"
+          radius="xl"
           aria-label={isMenuCollapsed ? "Expand menu" : "Collapse menu"}
           onClick={toggleMenu}
-          className="h-full flex-shrink-0 border-r border-gray-200"
-          style={{ width: 28 }}
+          className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-1/2 border-gray-200 bg-white shadow-sm"
         >
           {isMenuCollapsed ? (
             <IconChevronRight size={14} />
