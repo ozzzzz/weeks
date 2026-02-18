@@ -171,7 +171,7 @@ const CalendarDetail = ({ calendar }: CalendarDetailProps) => {
                   style={{
                     width: 8,
                     height: 8,
-                    borderRadius: 2,
+                    borderRadius: '50%',
                     backgroundColor: period.color ?? '#3b82f6',
                     flexShrink: 0,
                   }}

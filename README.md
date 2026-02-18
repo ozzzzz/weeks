@@ -63,8 +63,6 @@ Critical:
 Nice to have:
 
 - remove unnecessary lines
-- fix the problem with scrooling in the calendar settings (could not scroll to the bottom)
-- remove Period/Event and Calendar name from the tooltip on threejs hover
 - make the same icons for periods and events
 - make the palette with preset colors for events and periods
 - add educational setup for the new user
