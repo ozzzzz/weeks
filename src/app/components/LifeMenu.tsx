@@ -96,8 +96,8 @@ const LifeMenu = () => {
         }`}
         style={{ width: isMenuCollapsed ? 0 : SIDEBAR_WIDTH }}
       >
-        <div style={{ width: SIDEBAR_WIDTH }}>
-          <ScrollArea h="100dvh" offsetScrollbars>
+        <div style={{ width: SIDEBAR_WIDTH, height: "100%" }}>
+          <ScrollArea h="100%" offsetScrollbars>
             <Stack gap="md" p="md">
               <Tabs defaultValue="profile" variant="pills" color="dark">
                 <Tabs.List>
