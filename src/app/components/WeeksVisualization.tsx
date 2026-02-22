@@ -34,7 +34,8 @@ type HoverInfo = {
 
 const statusOrder: WeekStatus[] = ["lived", "remaining", "extra"];
 const EVENT_SCALE_MULTIPLIER = 2.0;
-const HOVER_SCALE_MULTIPLIER = 1.35;
+const EVENT_HOVER_SCALE_MULTIPLIER = 1.75;
+const PERIOD_BG_HOVER_EXPAND = 1.4;
 const HOVER_LIFT_Y_FACTOR = 0.16;
 const HOVER_FLOAT_Y_FACTOR = 0.05;
 const HOVER_LIFT_Z = 0.14;
@@ -64,13 +65,12 @@ const WeeksVisualization = () => {
   const layoutRef = useRef<LayoutInfo | null>(null);
   const updateLayoutRef = useRef<(animateOnly?: boolean) => void>(() => {});
   const didSetInitialZoom = useRef(false);
-  const hoveredWeekIndicesRef = useRef<Set<number>>(new Set());
+  const dummyRef = useRef(new THREE.Object3D());
+  const hoveredEventWeekIndicesRef = useRef<Set<number>>(new Set());
   const hoverProgressRef = useRef<Float32Array>(new Float32Array(0));
+  const periodBgHoverProgressRef = useRef<Float32Array>(new Float32Array(0));
+  const hoveredPeriodInstanceIndexRef = useRef<number>(-1);
   const hoverAnimationActiveRef = useRef(false);
-  const lightsRef = useRef<{
-    ambient: THREE.AmbientLight;
-    directional: THREE.DirectionalLight;
-  } | null>(null);
 
   const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
@@ -139,52 +139,22 @@ const WeeksVisualization = () => {
     );
   }, [activeCalendars, lifeProfile.dateOfBirth, weeks.length]);
 
-  const hoveredWeekIndices = useMemo(() => {
+  // Only event hover drives dot animation; period hover drives background expansion
+  const hoveredEventWeekIndices = useMemo(() => {
     const indices = new Set<number>();
+    if (!hoveredEventId) return indices;
 
-    if (hoveredEventId) {
-      for (const calendar of activeCalendars) {
-        const event = calendar.events.find(
-          (item) => item.id === hoveredEventId,
-        );
-        if (!event) continue;
-        const weekIndex = dateToWeekIndex(event.date, lifeProfile.dateOfBirth);
-        if (weekIndex >= 0 && weekIndex < weeks.length) {
-          indices.add(weekIndex);
-        }
-        break;
+    for (const calendar of activeCalendars) {
+      const event = calendar.events.find((item) => item.id === hoveredEventId);
+      if (!event) continue;
+      const weekIndex = dateToWeekIndex(event.date, lifeProfile.dateOfBirth);
+      if (weekIndex >= 0 && weekIndex < weeks.length) {
+        indices.add(weekIndex);
       }
+      break;
     }
-
-    if (hoveredPeriodId) {
-      for (const calendar of activeCalendars) {
-        const period = calendar.periods.find(
-          (item) => item.id === hoveredPeriodId,
-        );
-        if (!period) continue;
-        const start = Math.max(
-          0,
-          dateToWeekIndex(period.start, lifeProfile.dateOfBirth),
-        );
-        const end = Math.min(
-          weeks.length - 1,
-          dateToWeekIndex(period.end, lifeProfile.dateOfBirth),
-        );
-        for (let i = start; i <= end; i += 1) {
-          indices.add(i);
-        }
-        break;
-      }
-    }
-
     return indices;
-  }, [
-    hoveredEventId,
-    hoveredPeriodId,
-    activeCalendars,
-    lifeProfile.dateOfBirth,
-    weeks.length,
-  ]);
+  }, [hoveredEventId, activeCalendars, lifeProfile.dateOfBirth, weeks.length]);
 
   const eventInstances = useMemo(() => {
     const colorToWeekIndices = new Map<string, number[]>();
@@ -258,13 +228,6 @@ const WeeksVisualization = () => {
     gridGroupRef.current = gridGroup;
     scene.add(gridGroup);
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.85);
-    const directional = new THREE.DirectionalLight(0xffffff, 0.6);
-    directional.position.set(0.6, 0.8, 1.4);
-    scene.add(ambient);
-    scene.add(directional);
-    lightsRef.current = { ambient, directional };
-
     const camera = new THREE.OrthographicCamera(0, 0, 0, 0, -50, 50);
     camera.position.z = 10;
     cameraRef.current = camera;
@@ -308,10 +271,6 @@ const WeeksVisualization = () => {
       if (gridGroupRef.current) {
         scene.remove(gridGroupRef.current);
       }
-      if (lightsRef.current) {
-        scene.remove(lightsRef.current.ambient);
-        scene.remove(lightsRef.current.directional);
-      }
       Object.values(meshRefs.current).forEach((mesh) => {
         if (!mesh) return;
         mesh.geometry.dispose();
@@ -352,6 +311,7 @@ const WeeksVisualization = () => {
       const renderer = rendererRef.current;
       const camera = cameraRef.current;
       const meshes = meshRefs.current;
+      const dummy = dummyRef.current;
 
       if (!container || !renderer || !camera || weeks.length === 0) return;
 
@@ -428,16 +388,16 @@ const WeeksVisualization = () => {
         hoverProgressRef.current = new Float32Array(weeks.length);
       }
       const hoverProgress = hoverProgressRef.current;
-      const hoveredWeekIndicesSet = hoveredWeekIndicesRef.current;
-      let hasTransition = false;
+      const hoveredEventWeekIndicesSet = hoveredEventWeekIndicesRef.current;
+      let hasEventTransition = false;
 
       const getHoverValue = (weekIndex: number) => {
-        const target = hoveredWeekIndicesSet.has(weekIndex) ? 1 : 0;
+        const target = hoveredEventWeekIndicesSet.has(weekIndex) ? 1 : 0;
         const current = hoverProgress[weekIndex] ?? 0;
         const next = current + (target - current) * HOVER_EASING;
         const snapped = Math.abs(target - next) < HOVER_EPSILON ? target : next;
         if (snapped !== target) {
-          hasTransition = true;
+          hasEventTransition = true;
         }
         hoverProgress[weekIndex] = snapped;
         return snapped;
@@ -448,8 +408,6 @@ const WeeksVisualization = () => {
           ? ((Math.sin(now * HOVER_FLOAT_SPEED + weekIndex * 0.35) + 1) / 2) *
             hoverAmount
           : 0;
-
-      const dummy = new THREE.Object3D();
 
       const statusOffsets: Record<WeekStatus, number> = {
         lived: 0,
@@ -462,10 +420,9 @@ const WeeksVisualization = () => {
         const mesh = meshes[status];
         if (!mesh) return;
         mesh.count = statusCounts[status];
-        mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       });
 
-      // Position week circles
+      // Position week circles — only event hover scales dots
       for (let index = 0; index < weeks.length; index += 1) {
         const col = index % cols;
         const row = Math.floor(index / cols);
@@ -479,7 +436,8 @@ const WeeksVisualization = () => {
         const offset = statusOffsets[week.status];
         const hoverAmount = getHoverValue(index);
         const floatAmount = getFloatMultiplier(hoverAmount, index);
-        const scaleMultiplier = 1 + hoverAmount * (HOVER_SCALE_MULTIPLIER - 1);
+        const scaleMultiplier =
+          1 + hoverAmount * (EVENT_HOVER_SCALE_MULTIPLIER - 1);
         const yOffset =
           hoverAmount * cellSize * HOVER_LIFT_Y_FACTOR +
           floatAmount * cellSize * HOVER_FLOAT_Y_FACTOR;
@@ -503,30 +461,46 @@ const WeeksVisualization = () => {
         mesh.instanceMatrix.needsUpdate = true;
       });
 
-      // Position period backgrounds per period (color-locked materials)
-      if (!animateOnly) {
-        periodMeshesRef.current.forEach((mesh, index) => {
-          const instance = periodInstances[index];
-          if (!instance) return;
-          const bgWidth = cellSize;
-          const bgHeight = cellSize / 1.8;
-
-          instance.weekIndices.forEach((weekIndex, weekOffset) => {
-            const col = weekIndex % cols;
-            const row = Math.floor(weekIndex / cols);
-            const x = startX + col * cellSize;
-            const y = startY - row * cellSize;
-
-            dummy.position.set(x, y, -0.08);
-            dummy.scale.set(bgWidth, bgHeight, 1);
-            dummy.updateMatrix();
-            mesh.setMatrixAt(weekOffset, dummy.matrix);
-          });
-
-          mesh.count = instance.weekIndices.length;
-          mesh.instanceMatrix.needsUpdate = true;
-        });
+      // Position and animate period backgrounds — expand on hover, no dot scaling
+      if (periodBgHoverProgressRef.current.length !== periodInstances.length) {
+        periodBgHoverProgressRef.current = new Float32Array(
+          periodInstances.length,
+        );
       }
+      const periodBgProgress = periodBgHoverProgressRef.current;
+      const hoveredPeriodIdx = hoveredPeriodInstanceIndexRef.current;
+      let hasPeriodTransition = false;
+
+      periodMeshesRef.current.forEach((mesh, index) => {
+        const instance = periodInstances[index];
+        if (!instance) return;
+
+        const target = hoveredPeriodIdx === index ? 1 : 0;
+        const current = periodBgProgress[index] ?? 0;
+        const next = current + (target - current) * HOVER_EASING;
+        const snapped = Math.abs(target - next) < HOVER_EPSILON ? target : next;
+        if (snapped !== target) hasPeriodTransition = true;
+        periodBgProgress[index] = snapped;
+
+        const expand = 1 + snapped * (PERIOD_BG_HOVER_EXPAND - 1);
+        const bgWidth = cellSize * expand;
+        const bgHeight = (cellSize / 1.8) * expand;
+
+        instance.weekIndices.forEach((weekIndex, weekOffset) => {
+          const col = weekIndex % cols;
+          const row = Math.floor(weekIndex / cols);
+          const x = startX + col * cellSize;
+          const y = startY - row * cellSize;
+
+          dummy.position.set(x, y, -0.08);
+          dummy.scale.set(bgWidth, bgHeight, 1);
+          dummy.updateMatrix();
+          mesh.setMatrixAt(weekOffset, dummy.matrix);
+        });
+
+        mesh.count = instance.weekIndices.length;
+        mesh.instanceMatrix.needsUpdate = true;
+      });
 
       // Position event overlays (one mesh per event color)
       eventMeshesRef.current.forEach((mesh, index) => {
@@ -541,7 +515,7 @@ const WeeksVisualization = () => {
           const hoverAmount = hoverProgress[weekIndex] ?? 0;
           const floatAmount = getFloatMultiplier(hoverAmount, weekIndex);
           const scaleMultiplier =
-            1 + hoverAmount * (HOVER_SCALE_MULTIPLIER - 1);
+            1 + hoverAmount * (EVENT_HOVER_SCALE_MULTIPLIER - 1);
           const yOffset =
             hoverAmount * cellSize * HOVER_LIFT_Y_FACTOR +
             floatAmount * cellSize * HOVER_FLOAT_Y_FACTOR;
@@ -562,8 +536,10 @@ const WeeksVisualization = () => {
       });
 
       hoverAnimationActiveRef.current =
-        hoveredWeekIndicesSet.size > 0 || hasTransition;
-      controlsRef.current?.update();
+        hoveredEventWeekIndicesSet.size > 0 ||
+        hasEventTransition ||
+        hoveredPeriodIdx >= 0 ||
+        hasPeriodTransition;
     },
     [weeks, statusCounts, periodInstances, eventInstances],
   );
@@ -573,9 +549,16 @@ const WeeksVisualization = () => {
   }, [updateLayout]);
 
   useEffect(() => {
-    hoveredWeekIndicesRef.current = hoveredWeekIndices;
+    hoveredEventWeekIndicesRef.current = hoveredEventWeekIndices;
     hoverAnimationActiveRef.current = true;
-  }, [hoveredWeekIndices]);
+  }, [hoveredEventWeekIndices]);
+
+  useEffect(() => {
+    hoveredPeriodInstanceIndexRef.current = hoveredPeriodId
+      ? periodInstances.findIndex((i) => i.period.id === hoveredPeriodId)
+      : -1;
+    hoverAnimationActiveRef.current = true;
+  }, [hoveredPeriodId, periodInstances]);
 
   useEffect(() => {
     const scene = sceneRef.current;

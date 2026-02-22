@@ -62,10 +62,12 @@ Critical:
 
 Nice to have:
 
+- add instruction how to convert regular text or cv into needed format
 - remove unnecessary lines
 - add educational setup for the new user
 - when i hide/show settings tab, threehs scene should be reset (looks not good)
 - fix position with demo data
+- smooth hide/open animation
 
 Minor:
 
