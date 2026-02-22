@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import {
   ActionIcon,
   Button,
+  ColorInput,
   Divider,
   Group,
   NumberInput,
@@ -21,7 +22,7 @@ import {
 } from "@tabler/icons-react";
 import { calculateAge } from "../utils/dates";
 import { buildDemoState } from "../utils/demoData";
-import { calendarActions, lifeActions, layoutActions } from "../store";
+import { calendarActions, lifeActions, layoutActions, themeActions } from "../store";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import CalendarList from "./CalendarList";
 
@@ -33,7 +34,18 @@ const LifeMenu = () => {
   const isMenuCollapsed = useAppSelector(
     (state) => state.layout.isMenuCollapsed,
   );
+  const themeState = useAppSelector((state) => state.theme);
+  const activeTheme =
+    themeState.themes.find((t) => t.id === themeState.activeThemeId) ??
+    themeState.themes[0];
   const age = calculateAge(lifeProfile.dateOfBirth);
+
+  const handleColorChange = (key: "lived" | "remaining" | "extra") => (value: string) => {
+    dispatch(themeActions.upsertTheme({
+      ...activeTheme,
+      weeks: { ...activeTheme.weeks, [key]: value },
+    }));
+  };
 
   const handleBirthChange =
     (field: "year" | "month" | "day") => (value: string | number) => {
@@ -163,6 +175,21 @@ const LifeMenu = () => {
                       max={100}
                       onChange={handleExtraExpectancyChange}
                     />
+
+                    <Divider />
+
+                    <Stack gap="xs">
+                      <Text fw={600}>Colors</Text>
+                      {(["lived", "remaining", "extra"] as const).map((key) => (
+                        <ColorInput
+                          key={key}
+                          label={key.charAt(0).toUpperCase() + key.slice(1)}
+                          value={activeTheme.weeks[key]}
+                          onChange={handleColorChange(key)}
+                          swatchesPerRow={9}
+                        />
+                      ))}
+                    </Stack>
 
                     <Divider />
 
