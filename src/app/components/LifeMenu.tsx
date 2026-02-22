@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import {
   ActionIcon,
   Button,
@@ -18,10 +18,16 @@ import {
   IconCalendar,
   IconChevronLeft,
   IconChevronRight,
+  IconDatabase,
+  IconDownload,
+  IconRefresh,
+  IconTrash,
+  IconUpload,
   IconUser,
 } from "@tabler/icons-react";
 import { calculateAge } from "../utils/dates";
 import { buildDemoState } from "../utils/demoData";
+import { downloadPersistedState, parsePersistedState } from "../utils/persistence";
 import { calendarActions, lifeActions, layoutActions, themeActions } from "../store";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import CalendarList from "./CalendarList";
@@ -31,10 +37,14 @@ const SIDEBAR_WIDTH = 320;
 const LifeMenu = () => {
   const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
+  const calendars = useAppSelector((state) => state.calendar.calendars);
+  const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
   const isMenuCollapsed = useAppSelector(
     (state) => state.layout.isMenuCollapsed,
   );
   const themeState = useAppSelector((state) => state.theme);
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const activeTheme =
     themeState.themes.find((t) => t.id === themeState.activeThemeId) ??
     themeState.themes[0];
@@ -99,6 +109,47 @@ const LifeMenu = () => {
     dispatch(calendarActions.setCalendars([]));
   };
 
+  const handleSaveData = () => {
+    downloadPersistedState({
+      profile: lifeProfile,
+      calendars,
+      activeCalendarId,
+      isMenuCollapsed,
+    });
+  };
+
+  const handleLoadDataClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleLoadData = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const raw = await file.text();
+    const parsed = parsePersistedState(raw);
+
+    if (!parsed) {
+      setImportError('Invalid settings JSON file');
+      event.target.value = '';
+      return;
+    }
+
+    dispatch(lifeActions.setLifeProfile(parsed.profile));
+    dispatch(calendarActions.setCalendars(parsed.calendars));
+    dispatch(calendarActions.setActiveCalendar(parsed.activeCalendarId));
+    dispatch(layoutActions.setMenuCollapsed(parsed.isMenuCollapsed));
+    setImportError(null);
+    event.target.value = '';
+  };
+
+  const handleClearData = () => {
+    if (confirm('Are you sure you want to clear all data? This will reset everything to defaults.')) {
+      dispatch(calendarActions.setCalendars([]));
+      dispatch(calendarActions.setActiveCalendar(null));
+    }
+  };
+
   return (
     <div className="relative flex h-full flex-shrink-0">
       {/* Sidebar content */}
@@ -124,6 +175,12 @@ const LifeMenu = () => {
                     leftSection={<IconCalendar size={14} />}
                   >
                     Calendars
+                  </Tabs.Tab>
+                  <Tabs.Tab
+                    value="data"
+                    leftSection={<IconDatabase size={14} />}
+                  >
+                    Data
                   </Tabs.Tab>
                 </Tabs.List>
 
@@ -191,37 +248,59 @@ const LifeMenu = () => {
                       ))}
                     </Stack>
 
-                    <Divider />
-
-                    <Stack gap="xs">
-                      <Text fw={600}>Demo</Text>
-                      <Text size="xs" c="dimmed">
-                        Load sample data or clear calendars.
-                      </Text>
-                      <Group gap="xs">
-                        <Button
-                          size="xs"
-                          variant="subtle"
-                          color="dark"
-                          onClick={handleLoadDemo}
-                        >
-                          Load demo
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="subtle"
-                          color="red"
-                          onClick={handleClearCalendars}
-                        >
-                          Clear all
-                        </Button>
-                      </Group>
-                    </Stack>
                   </Stack>
                 </Tabs.Panel>
 
                 <Tabs.Panel value="calendars" pt="md">
                   <CalendarList />
+                </Tabs.Panel>
+
+                <Tabs.Panel value="data" pt="md">
+                  <Stack gap="xs">
+                    <Button
+                      fullWidth
+                      variant="default"
+                      leftSection={<IconDownload size={14} />}
+                      onClick={handleSaveData}
+                    >
+                      Save data
+                    </Button>
+                    <Button
+                      fullWidth
+                      variant="default"
+                      leftSection={<IconUpload size={14} />}
+                      onClick={handleLoadDataClick}
+                    >
+                      Load data
+                    </Button>
+                    {importError && (
+                      <Text size="xs" c="red">{importError}</Text>
+                    )}
+                    <Button
+                      fullWidth
+                      variant="default"
+                      leftSection={<IconRefresh size={14} />}
+                      onClick={handleLoadDemo}
+                    >
+                      Load demo
+                    </Button>
+                    <Button
+                      fullWidth
+                      variant="subtle"
+                      color="red"
+                      leftSection={<IconTrash size={14} />}
+                      onClick={handleClearData}
+                    >
+                      Clear all
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/json"
+                      className="hidden"
+                      onChange={handleLoadData}
+                    />
+                  </Stack>
                 </Tabs.Panel>
               </Tabs>
             </Stack>
