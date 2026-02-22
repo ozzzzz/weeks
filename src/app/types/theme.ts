@@ -1,6 +1,5 @@
 export interface WeekColors {
   lived: string;
-  current: string;
   remaining: string;
   extra: string;
 }

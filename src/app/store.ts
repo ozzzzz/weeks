@@ -65,7 +65,6 @@ const defaultTheme: ColorTheme = {
     name: 'Sky',
     weeks: {
         lived: '#0f2d52',
-        current: '#22c55e',
         remaining: '#7dd3fc',
         extra: '#e0f2fe',
     },

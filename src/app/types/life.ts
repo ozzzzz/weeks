@@ -10,7 +10,7 @@ export interface LifeProfile {
   extraExpectancyYears: number;
 }
 
-export type WeekStatus = 'lived' | 'current' | 'remaining' | 'extra';
+export type WeekStatus = 'lived' | 'remaining' | 'extra';
 
 export interface WeekPoint {
   index: number;

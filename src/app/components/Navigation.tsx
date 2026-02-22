@@ -31,7 +31,7 @@ const Navigation = () => {
           acc[week.status] += 1;
           return acc;
         },
-        { lived: 0, current: 0, remaining: 0, extra: 0 },
+        { lived: 0, remaining: 0, extra: 0 },
       ),
     [weeks],
   );

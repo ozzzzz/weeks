@@ -56,7 +56,6 @@ const WeeksVisualization = () => {
   const gridGroupRef = useRef<THREE.Group | null>(null);
   const meshRefs = useRef<Record<WeekStatus, THREE.InstancedMesh | null>>({
     lived: null,
-    current: null,
     remaining: null,
     extra: null,
   });
@@ -187,7 +186,7 @@ const WeeksVisualization = () => {
           acc[week.status] += 1;
           return acc;
         },
-        { lived: 0, current: 0, remaining: 0, extra: 0 },
+        { lived: 0, remaining: 0, extra: 0 },
       ),
     [weeks],
   );
@@ -195,7 +194,6 @@ const WeeksVisualization = () => {
   const colorMap = useMemo(
     () => ({
       lived: new THREE.Color(activeTheme?.weeks.lived ?? "#1e293b"),
-      current: new THREE.Color(activeTheme?.weeks.current ?? "#22c55e"),
       remaining: new THREE.Color(activeTheme?.weeks.remaining ?? "#e2e8f0"),
       extra: new THREE.Color(activeTheme?.weeks.extra ?? "#fcd34d"),
     }),
@@ -411,7 +409,6 @@ const WeeksVisualization = () => {
 
       const statusOffsets: Record<WeekStatus, number> = {
         lived: 0,
-        current: 0,
         remaining: 0,
         extra: 0,
       };
