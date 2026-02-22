@@ -15,15 +15,12 @@ import {
   Tooltip,
 } from "@mantine/core";
 import {
-  IconCalendar,
   IconChevronLeft,
   IconChevronRight,
-  IconDatabase,
   IconDownload,
   IconRefresh,
   IconTrash,
   IconUpload,
-  IconUser,
 } from "@tabler/icons-react";
 import { calculateAge } from "../utils/dates";
 import { buildDemoState } from "../utils/demoData";
@@ -32,7 +29,7 @@ import { calendarActions, lifeActions, layoutActions, themeActions } from "../st
 import { useAppDispatch, useAppSelector } from "../hooks";
 import CalendarList from "./CalendarList";
 
-const SIDEBAR_WIDTH = 320;
+const SIDEBAR_WIDTH = 360;
 
 const LifeMenu = () => {
   const dispatch = useAppDispatch();
@@ -98,15 +95,12 @@ const LifeMenu = () => {
   }, [dispatch]);
 
   const handleLoadDemo = () => {
+    if (!confirm('Loading demo data will overwrite your current profile and calendars. Continue?')) return;
     const demo = buildDemoState();
     dispatch(lifeActions.setLifeProfile(demo.profile));
     dispatch(calendarActions.setCalendars(demo.calendars));
     dispatch(calendarActions.setActiveCalendar(demo.activeCalendarId ?? null));
     dispatch(layoutActions.setMenuCollapsed(false));
-  };
-
-  const handleClearCalendars = () => {
-    dispatch(calendarActions.setCalendars([]));
   };
 
   const handleSaveData = () => {
@@ -154,34 +148,17 @@ const LifeMenu = () => {
     <div className="relative flex h-full flex-shrink-0">
       {/* Sidebar content */}
       <div
-        className={`h-full overflow-hidden transition-[width] duration-300 ease-in-out ${
-          isMenuCollapsed ? "" : "border-r border-gray-200"
-        }`}
+        className="h-full overflow-hidden transition-[width] duration-300 ease-in-out"
         style={{ width: isMenuCollapsed ? 0 : SIDEBAR_WIDTH }}
       >
         <div style={{ width: SIDEBAR_WIDTH, height: "100%" }}>
           <ScrollArea h="100%" offsetScrollbars>
             <Stack gap="md" p="md">
               <Tabs defaultValue="profile" variant="pills" color="dark">
-                <Tabs.List>
-                  <Tabs.Tab
-                    value="profile"
-                    leftSection={<IconUser size={14} />}
-                  >
-                    Profile
-                  </Tabs.Tab>
-                  <Tabs.Tab
-                    value="calendars"
-                    leftSection={<IconCalendar size={14} />}
-                  >
-                    Calendars
-                  </Tabs.Tab>
-                  <Tabs.Tab
-                    value="data"
-                    leftSection={<IconDatabase size={14} />}
-                  >
-                    Data
-                  </Tabs.Tab>
+                <Tabs.List grow>
+                  <Tabs.Tab value="profile">Profile</Tabs.Tab>
+                  <Tabs.Tab value="calendars">Calendars</Tabs.Tab>
+                  <Tabs.Tab value="data">Data</Tabs.Tab>
                 </Tabs.List>
 
                 <Tabs.Panel value="profile" pt="md">
@@ -276,23 +253,23 @@ const LifeMenu = () => {
                     {importError && (
                       <Text size="xs" c="red">{importError}</Text>
                     )}
-                    <Button
-                      fullWidth
-                      variant="default"
-                      leftSection={<IconRefresh size={14} />}
-                      onClick={handleLoadDemo}
-                    >
-                      Load demo
-                    </Button>
-                    <Button
-                      fullWidth
-                      variant="subtle"
-                      color="red"
-                      leftSection={<IconTrash size={14} />}
-                      onClick={handleClearData}
-                    >
-                      Clear all
-                    </Button>
+                    <Group grow mt="xs">
+                      <Button
+                        variant="default"
+                        leftSection={<IconRefresh size={14} />}
+                        onClick={handleLoadDemo}
+                      >
+                        Load demo
+                      </Button>
+                      <Button
+                        variant="outline"
+                        color="red"
+                        leftSection={<IconTrash size={14} />}
+                        onClick={handleClearData}
+                      >
+                        Clear all
+                      </Button>
+                    </Group>
                     <input
                       ref={fileInputRef}
                       type="file"
