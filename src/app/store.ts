@@ -64,10 +64,10 @@ const defaultTheme: ColorTheme = {
     id: 'default',
     name: 'Sky',
     weeks: {
-        lived: '#1e293b',
+        lived: '#0f2d52',
         current: '#22c55e',
-        remaining: '#e2e8f0',
-        extra: '#fcd34d',
+        remaining: '#7dd3fc',
+        extra: '#e0f2fe',
     },
     accent: '#2563eb',
     background: '#f8fafc',
