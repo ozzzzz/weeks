@@ -14,13 +14,6 @@ const makeDate = (year: number, month?: number, day?: number): PartialDate => ({
 });
 
 export const buildDemoState = (): DemoState => {
-  const today = new Date();
-  const todayDate: PartialDate = {
-    year: today.getFullYear(),
-    month: today.getMonth() + 1,
-    day: today.getDate(),
-  };
-
   const profile: LifeProfile = {
     name: 'Demo User',
     dateOfBirth: makeDate(1990, 6, 15),
@@ -28,20 +21,11 @@ export const buildDemoState = (): DemoState => {
     extraExpectancyYears: 20,
   };
 
-  const beyondLifeYear =
-    profile.dateOfBirth.year + profile.realExpectancyYears + profile.extraExpectancyYears + 5;
-
   const calendars: Calendar[] = [
     {
       id: 'calendar-personal',
       name: 'Personal ✨',
       events: [
-        {
-          id: 'event-born',
-          label: 'Born',
-          date: makeDate(1990, 6, 15),
-          color: '#16a34a',
-        },
         {
           id: 'event-move',
           label: 'Moved to new city',
@@ -55,22 +39,10 @@ export const buildDemoState = (): DemoState => {
           color: '#a855f7',
         },
         {
-          id: 'event-today',
-          label: 'Today checkpoint',
-          date: todayDate,
-          color: '#f97316',
-        },
-        {
           id: 'event-future',
           label: 'Future trip',
-          date: makeDate(today.getFullYear() + 4, 7, 1),
+          date: makeDate(2030, 7, 1),
           color: '#f59e0b',
-        },
-        {
-          id: 'event-before-birth',
-          label: 'Before birth (ignored)',
-          date: makeDate(1985, 1, 1),
-          color: '#ef4444',
         },
       ],
       periods: [
@@ -90,10 +62,10 @@ export const buildDemoState = (): DemoState => {
         },
         {
           id: 'period-long-plan',
-          label: 'Plan beyond life expectancy',
-          start: makeDate(2060),
-          end: makeDate(beyondLifeYear, 12, 31),
-          color: '#14b8a6',
+          label: 'Plan beyond',
+          start: makeDate(2040),
+          end: makeDate(2055, 12, 31),
+          color: '#f9a8d4',
         },
       ],
       isVisible: true,
@@ -112,7 +84,7 @@ export const buildDemoState = (): DemoState => {
           id: 'event-promotion',
           label: 'Promotion',
           date: makeDate(2016, 3),
-          color: '#6366f1',
+          color: '#f59e0b',
         },
       ],
       periods: [
@@ -135,12 +107,12 @@ export const buildDemoState = (): DemoState => {
           label: 'Startup era (overlaps)',
           start: makeDate(2015, 1),
           end: makeDate(2019, 12),
-          color: '#9333ea',
+          color: '#86efac',
         },
       ],
       isVisible: true,
     },
   ];
 
-  return { profile, calendars, activeCalendarId: calendars[0]?.id };
+  return { profile, calendars, activeCalendarId: 'calendar-career' };
 };
