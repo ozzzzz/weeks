@@ -1,10 +1,11 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Container, Group, Text, Title } from '@mantine/core';
+import { Container, Group, Text } from '@mantine/core';
 import { useAppSelector } from '../hooks';
 import { buildWeekPoints } from '../utils/weeks';
 import { WeekStatus } from '../types';
+import { MetaText } from './ui/text';
 
 const statusOrder: WeekStatus[] = ['lived', 'remaining', 'extra'];
 
@@ -33,13 +34,13 @@ const Navigation = () => {
     <header>
       <Container fluid px="lg" py="xs">
         <Group gap="md" align="center">
-          <Title order={3}>Weeks</Title>
+          <Text size="sm" fw={600}>Weeks</Text>
             {statusOrder.map((status) => (
               <Group key={status} gap={4}>
-                <span style={{ color: colorForStatus(status), fontSize: 10, lineHeight: 1 }}>●</span>
-                <Text size="xs" c="dimmed">
+                <Text component="span" size="xs" style={{ color: colorForStatus(status), lineHeight: 1 }}>●</Text>
+                <MetaText>
                   {status.charAt(0).toUpperCase() + status.slice(1)} {statusCounts[status]}
-                </Text>
+                </MetaText>
               </Group>
             ))}
           </Group>

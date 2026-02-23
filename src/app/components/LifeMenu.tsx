@@ -14,6 +14,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { SectionLabel, ErrorText } from "./ui/text";
 import { DateInput } from "@mantine/dates";
 import {
   IconChevronLeft,
@@ -218,7 +219,7 @@ const LifeMenu = () => {
                     <Divider />
 
                     <Stack gap="xs">
-                      <Text fw={600}>Colors</Text>
+                      <SectionLabel>Colors</SectionLabel>
                       {(["lived", "remaining", "extra"] as const).map((key) => (
                         <ColorInput
                           key={key}
