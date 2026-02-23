@@ -56,18 +56,11 @@ src/
 
 Critical:
 
-- test local storage persistence
-- add page about the app, add buymeacoffee link
-- hovering on remainings is poorly visible
-
 Nice to have:
 
 - add instruction how to convert regular text or cv into needed format
-- remove unnecessary lines
 - add educational setup for the new user
 - when i hide/show settings tab, threehs scene should be reset (looks not good)
-- fix position with demo data
-- smooth hide/open animation
 
 Minor:
 
