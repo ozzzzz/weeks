@@ -33,6 +33,7 @@ type HoverInfo = {
 };
 
 const statusOrder: WeekStatus[] = ["lived", "remaining", "extra"];
+const MENU_WIDTH = 720;
 const EVENT_SCALE_MULTIPLIER = 2.0;
 const EVENT_HOVER_SCALE_MULTIPLIER = 1.75;
 const PERIOD_BG_HOVER_EXPAND = 1.4;
@@ -70,6 +71,8 @@ const WeeksVisualization = () => {
   const periodBgHoverProgressRef = useRef<Float32Array>(new Float32Array(0));
   const hoveredPeriodInstanceIndexRef = useRef<number>(-1);
   const hoverAnimationActiveRef = useRef(false);
+  const cameraOffsetXRef = useRef(0);
+  const targetCameraOffsetXRef = useRef(0);
 
   const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
@@ -82,6 +85,9 @@ const WeeksVisualization = () => {
   const hoveredEventId = useAppSelector((state) => state.layout.hoveredEventId);
   const hoveredPeriodId = useAppSelector(
     (state) => state.layout.hoveredPeriodId,
+  );
+  const isMenuCollapsed = useAppSelector(
+    (state) => state.layout.isMenuCollapsed,
   );
   const themeState = useAppSelector((state) => state.theme);
   const activeTheme =
@@ -321,17 +327,34 @@ const WeeksVisualization = () => {
       let width: number;
       let height: number;
 
+      let hasCameraTransition = false;
+
       if (animateOnly && layoutRef.current) {
         ({ cols, rows, cellSize, startX, startY, width, height } =
           layoutRef.current);
+
+        const targetOffset = targetCameraOffsetXRef.current;
+        const currentOffset = cameraOffsetXRef.current;
+        const next =
+          currentOffset + (targetOffset - currentOffset) * HOVER_EASING;
+        const snapped =
+          Math.abs(targetOffset - next) < HOVER_EPSILON ? targetOffset : next;
+        if (snapped !== cameraOffsetXRef.current) {
+          cameraOffsetXRef.current = snapped;
+          camera.left = -width / 2 - snapped;
+          camera.right = width / 2 - snapped;
+          camera.updateProjectionMatrix();
+        }
+        if (snapped !== targetOffset) hasCameraTransition = true;
       } else {
         width = container.clientWidth;
         height = container.clientHeight;
 
         renderer.setSize(width, height, false);
 
-        camera.left = -width / 2;
-        camera.right = width / 2;
+        cameraOffsetXRef.current = targetCameraOffsetXRef.current;
+        camera.left = -width / 2 - cameraOffsetXRef.current;
+        camera.right = width / 2 - cameraOffsetXRef.current;
         camera.top = height / 2;
         camera.bottom = -height / 2;
         if (!didSetInitialZoom.current) {
@@ -536,7 +559,8 @@ const WeeksVisualization = () => {
         hoveredEventWeekIndicesSet.size > 0 ||
         hasEventTransition ||
         hoveredPeriodIdx >= 0 ||
-        hasPeriodTransition;
+        hasPeriodTransition ||
+        hasCameraTransition;
     },
     [weeks, statusCounts, periodInstances, eventInstances],
   );
@@ -544,6 +568,11 @@ const WeeksVisualization = () => {
   useEffect(() => {
     updateLayoutRef.current = updateLayout;
   }, [updateLayout]);
+
+  useEffect(() => {
+    targetCameraOffsetXRef.current = isMenuCollapsed ? 0 : MENU_WIDTH / 2;
+    hoverAnimationActiveRef.current = true;
+  }, [isMenuCollapsed]);
 
   useEffect(() => {
     hoveredEventWeekIndicesRef.current = hoveredEventWeekIndices;

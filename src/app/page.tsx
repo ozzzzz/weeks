@@ -6,11 +6,9 @@ export default function Home() {
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
       <Navigation />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="relative flex-1 overflow-hidden">
+        <WeeksVisualization />
         <LifeMenu />
-        <div className="relative flex-1 overflow-hidden">
-          <WeeksVisualization />
-        </div>
       </div>
     </div>
   );

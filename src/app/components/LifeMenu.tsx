@@ -145,10 +145,10 @@ const LifeMenu = () => {
   };
 
   return (
-    <div className="relative flex h-full flex-shrink-0">
+    <div className="absolute left-0 top-0 z-10 flex h-full">
       {/* Sidebar content */}
       <div
-        className="h-full overflow-hidden transition-[width] duration-300 ease-in-out"
+        className="h-full overflow-hidden bg-white shadow-xl transition-[width] duration-300 ease-in-out"
         style={{ width: isMenuCollapsed ? 0 : SIDEBAR_WIDTH }}
       >
         <div style={{ width: SIDEBAR_WIDTH, height: "100%" }}>
