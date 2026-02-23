@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Badge, Container, Group, Text, Title } from '@mantine/core';
+import { Container, Group, Text, Title } from '@mantine/core';
 import { useAppSelector } from '../hooks';
 import { buildWeekPoints } from '../utils/weeks';
 import { WeekStatus } from '../types';
@@ -32,19 +32,17 @@ const Navigation = () => {
   return (
     <header>
       <Container fluid px="lg" py="xs">
-        <Group justify="space-between">
+        <Group gap="md" align="center">
           <Title order={3}>Weeks</Title>
-          <Group gap="xs">
             {statusOrder.map((status) => (
-              <Badge key={status} color={colorForStatus(status)} variant="filled" size="sm">
-                {status} · {statusCounts[status]}
-              </Badge>
+              <Group key={status} gap={4}>
+                <span style={{ color: colorForStatus(status), fontSize: 10, lineHeight: 1 }}>●</span>
+                <Text size="xs" c="dimmed">
+                  {status.charAt(0).toUpperCase() + status.slice(1)} {statusCounts[status]}
+                </Text>
+              </Group>
             ))}
-            <Text size="xs" c="dimmed">
-              Total: {weeks.length}
-            </Text>
           </Group>
-        </Group>
       </Container>
     </header>
   );
