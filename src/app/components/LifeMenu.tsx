@@ -92,13 +92,10 @@ const LifeMenu = () => {
     dispatch(layoutActions.toggleMenu());
   };
 
-  // Tab key toggles sidebar
+  // Ctrl/⌘+\ toggles sidebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't toggle if user is typing in an input
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-      if (e.key === "Tab") {
+      if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
         e.preventDefault();
         dispatch(layoutActions.toggleMenu());
       }
@@ -294,7 +291,7 @@ const LifeMenu = () => {
 
       {/* Toggle button */}
       <Tooltip
-        label={isMenuCollapsed ? "Open (Tab)" : "Close (Tab)"}
+        label={isMenuCollapsed ? "Open (Ctrl+\\)" : "Close (Ctrl+\\)"}
         position="right"
       >
         <ActionIcon
