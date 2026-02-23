@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import { Provider } from 'react-redux';
 import Home from './app/page';
+import About from './app/about';
 import { calendarActions, layoutActions, lifeActions, store } from './app/store';
 import { loadPersistedState, savePersistedState } from './app/utils/persistence';
 
@@ -31,7 +33,12 @@ const App = () => {
   return (
     <Provider store={store}>
       <MantineProvider defaultColorScheme="light">
-        <Home />
+        <HashRouter>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+          </Routes>
+        </HashRouter>
       </MantineProvider>
     </Provider>
   );
