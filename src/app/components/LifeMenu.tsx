@@ -14,6 +14,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { DateInput } from "@mantine/dates";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -22,10 +23,18 @@ import {
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
-import { calculateAge } from "../utils/dates";
+import { partialDateToDate } from "../utils/dates";
 import { buildDemoState } from "../utils/demoData";
-import { downloadPersistedState, parsePersistedState } from "../utils/persistence";
-import { calendarActions, lifeActions, layoutActions, themeActions } from "../store";
+import {
+  downloadPersistedState,
+  parsePersistedState,
+} from "../utils/persistence";
+import {
+  calendarActions,
+  lifeActions,
+  layoutActions,
+  themeActions,
+} from "../store";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import CalendarList from "./CalendarList";
 
@@ -35,7 +44,9 @@ const LifeMenu = () => {
   const dispatch = useAppDispatch();
   const lifeProfile = useAppSelector((state) => state.life.profile);
   const calendars = useAppSelector((state) => state.calendar.calendars);
-  const activeCalendarId = useAppSelector((state) => state.calendar.activeCalendarId);
+  const activeCalendarId = useAppSelector(
+    (state) => state.calendar.activeCalendarId,
+  );
   const isMenuCollapsed = useAppSelector(
     (state) => state.layout.isMenuCollapsed,
   );
@@ -45,34 +56,35 @@ const LifeMenu = () => {
   const activeTheme =
     themeState.themes.find((t) => t.id === themeState.activeThemeId) ??
     themeState.themes[0];
-  const age = calculateAge(lifeProfile.dateOfBirth);
-
-  const handleColorChange = (key: "lived" | "remaining" | "extra") => (value: string) => {
-    dispatch(themeActions.upsertTheme({
-      ...activeTheme,
-      weeks: { ...activeTheme.weeks, [key]: value },
-    }));
-  };
-
-  const handleBirthChange =
-    (field: "year" | "month" | "day") => (value: string | number) => {
-      if (typeof value !== "number") return;
+  const handleColorChange =
+    (key: "lived" | "remaining" | "extra") => (value: string) => {
       dispatch(
-        lifeActions.setDateOfBirth({
-          ...lifeProfile.dateOfBirth,
-          [field]: value,
+        themeActions.upsertTheme({
+          ...activeTheme,
+          weeks: { ...activeTheme.weeks, [key]: value },
         }),
       );
     };
 
+  const birthdateAsDate = partialDateToDate(lifeProfile.dateOfBirth);
+
+  const handleBirthDateChange = (value: string | null) => {
+    if (!value) return;
+    const [year, month, day] = value.split("-").map(Number);
+    if (!year || isNaN(year)) return;
+    dispatch(lifeActions.setDateOfBirth({ year, month, day }));
+  };
+
   const handleRealExpectancyChange = (value: string | number) => {
     if (typeof value !== "number") return;
     dispatch(lifeActions.setRealExpectancyYears(value));
+    dispatch(lifeActions.setExtraExpectancyYears(100 - value));
   };
 
   const handleExtraExpectancyChange = (value: string | number) => {
     if (typeof value !== "number") return;
     dispatch(lifeActions.setExtraExpectancyYears(value));
+    dispatch(lifeActions.setRealExpectancyYears(100 - value));
   };
 
   const toggleMenu = () => {
@@ -95,7 +107,12 @@ const LifeMenu = () => {
   }, [dispatch]);
 
   const handleLoadDemo = () => {
-    if (!confirm('Loading demo data will overwrite your current profile and calendars. Continue?')) return;
+    if (
+      !confirm(
+        "Loading demo data will overwrite your current profile and calendars. Continue?",
+      )
+    )
+      return;
     const demo = buildDemoState();
     dispatch(lifeActions.setLifeProfile(demo.profile));
     dispatch(calendarActions.setCalendars(demo.calendars));
@@ -124,8 +141,8 @@ const LifeMenu = () => {
     const parsed = parsePersistedState(raw);
 
     if (!parsed) {
-      setImportError('Invalid settings JSON file');
-      event.target.value = '';
+      setImportError("Invalid settings JSON file");
+      event.target.value = "";
       return;
     }
 
@@ -134,11 +151,15 @@ const LifeMenu = () => {
     dispatch(calendarActions.setActiveCalendar(parsed.activeCalendarId));
     dispatch(layoutActions.setMenuCollapsed(parsed.isMenuCollapsed));
     setImportError(null);
-    event.target.value = '';
+    event.target.value = "";
   };
 
   const handleClearData = () => {
-    if (confirm('Are you sure you want to clear all data? This will reset everything to defaults.')) {
+    if (
+      confirm(
+        "Are you sure you want to clear all data? This will reset everything to defaults.",
+      )
+    ) {
       dispatch(calendarActions.setCalendars([]));
       dispatch(calendarActions.setActiveCalendar(null));
     }
@@ -163,52 +184,36 @@ const LifeMenu = () => {
 
                 <Tabs.Panel value="profile" pt="md">
                   <Stack gap="xs">
-                    <NumberInput
-                      label="Birth year"
-                      value={lifeProfile.dateOfBirth.year}
-                      min={1900}
-                      max={new Date().getFullYear()}
-                      onChange={handleBirthChange("year")}
+                    <DateInput
+                      label="Birthdate"
+                      value={birthdateAsDate}
+                      onChange={handleBirthDateChange}
+                      minDate={new Date(1900, 0, 1)}
+                      maxDate={new Date()}
+                      valueFormat="YYYY-MM-DD"
+                      clearable={false}
                     />
 
-                    <Group grow>
+                    <Group align="flex-end" gap="xs">
                       <NumberInput
-                        label="Birth month"
-                        value={lifeProfile.dateOfBirth.month}
-                        min={1}
-                        max={12}
-                        onChange={handleBirthChange("month")}
+                        label="Life expectancy"
+                        value={lifeProfile.realExpectancyYears}
+                        min={0}
+                        max={100}
+                        style={{ flex: 1 }}
+                        onChange={handleRealExpectancyChange}
                       />
+                      <Text pb={6}>+</Text>
                       <NumberInput
-                        label="Birth day"
-                        value={lifeProfile.dateOfBirth.day}
-                        min={1}
-                        max={31}
-                        onChange={handleBirthChange("day")}
+                        label="Extra years"
+                        value={lifeProfile.extraExpectancyYears}
+                        min={0}
+                        max={100}
+                        style={{ flex: 1 }}
+                        onChange={handleExtraExpectancyChange}
                       />
+                      <Text pb={6}>= 100</Text>
                     </Group>
-
-                    <Text size="sm" c="dimmed">
-                      Current age: {age} years
-                    </Text>
-
-                    <Divider />
-
-                    <NumberInput
-                      label="Life expectancy (years)"
-                      value={lifeProfile.realExpectancyYears}
-                      min={0}
-                      max={100}
-                      onChange={handleRealExpectancyChange}
-                    />
-
-                    <NumberInput
-                      label="Extra years (up to 100 in total)"
-                      value={lifeProfile.extraExpectancyYears}
-                      min={0}
-                      max={100}
-                      onChange={handleExtraExpectancyChange}
-                    />
 
                     <Divider />
 
@@ -224,7 +229,6 @@ const LifeMenu = () => {
                         />
                       ))}
                     </Stack>
-
                   </Stack>
                 </Tabs.Panel>
 
@@ -251,7 +255,9 @@ const LifeMenu = () => {
                       Load data
                     </Button>
                     {importError && (
-                      <Text size="xs" c="red">{importError}</Text>
+                      <Text size="xs" c="red">
+                        {importError}
+                      </Text>
                     )}
                     <Group grow mt="xs">
                       <Button
