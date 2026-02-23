@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Weeks
 
-## Getting Started
+Static life visualization app: your full lifetime shown as week "coins".
 
-First, run the development server:
+## Stack
+
+- Vite + React + TypeScript
+- Mantine for UI
+- Tailwind CSS for layout/styles
+- Redux Toolkit for state
+- Three.js for week rendering
+
+## Local-only storage
+
+- App state is stored in `localStorage`
+- No backend, no cloud persistence
+- Settings can be exported to JSON and imported back from JSON
+
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Build
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm run preview
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## GitHub Pages deploy
 
-## Learn More
+```bash
+npm run deploy
+```
 
-To learn more about Next.js, take a look at the following resources:
+The Vite config uses `base: "./"` so static assets work on GitHub Pages subpaths.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+src/
+├── app/
+│   ├── components/
+│   ├── types/
+│   ├── utils/
+│   ├── hooks.ts
+│   └── store.ts
+├── App.tsx
+└── main.tsx
+```
 
-## Deploy on Vercel
+## TODO
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Critical:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- test local storage persistence
+- add page about the app, add buymeacoffee link
+- hovering on remainings is poorly visible
+
+Nice to have:
+
+- add instruction how to convert regular text or cv into needed format
+- remove unnecessary lines
+- add educational setup for the new user
+- when i hide/show settings tab, threehs scene should be reset (looks not good)
+- fix position with demo data
+- smooth hide/open animation
+
+Minor:
+
+- make animation on hover cooler
