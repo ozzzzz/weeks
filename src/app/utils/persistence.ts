@@ -7,6 +7,7 @@ export interface PersistedState {
   calendars: Calendar[];
   activeCalendarId: string | null;
   isMenuCollapsed: boolean;
+  viewMode: 'weeks' | 'months';
 }
 
 export const loadPersistedState = (): PersistedState | null => {
@@ -67,15 +68,21 @@ export const isPersistedState = (value: unknown): value is PersistedState => {
     Array.isArray(value.calendars) &&
     value.calendars.every(isCalendar) &&
     (value.activeCalendarId === null || typeof value.activeCalendarId === 'string') &&
-    typeof value.isMenuCollapsed === 'boolean'
+    typeof value.isMenuCollapsed === 'boolean' &&
+    (value.viewMode === undefined || value.viewMode === 'weeks' || value.viewMode === 'months')
   );
 };
+
+export const normalizePersistedState = (state: Omit<PersistedState, 'viewMode'> & { viewMode?: 'weeks' | 'months' }): PersistedState => ({
+  ...state,
+  viewMode: state.viewMode ?? 'weeks',
+});
 
 export const parsePersistedState = (json: string): PersistedState | null => {
   try {
     const parsed = JSON.parse(json) as unknown;
     if (!isPersistedState(parsed)) return null;
-    return parsed;
+    return normalizePersistedState(parsed);
   } catch {
     return null;
   }

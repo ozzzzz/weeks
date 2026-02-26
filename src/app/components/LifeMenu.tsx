@@ -51,6 +51,7 @@ const LifeMenu = () => {
   const isMenuCollapsed = useAppSelector(
     (state) => state.layout.isMenuCollapsed,
   );
+  const viewMode = useAppSelector((state) => state.layout.viewMode);
   const themeState = useAppSelector((state) => state.theme);
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,6 +125,7 @@ const LifeMenu = () => {
       calendars,
       activeCalendarId,
       isMenuCollapsed,
+      viewMode,
     });
   };
 
@@ -148,6 +150,7 @@ const LifeMenu = () => {
     dispatch(calendarActions.setCalendars(parsed.calendars));
     dispatch(calendarActions.setActiveCalendar(parsed.activeCalendarId));
     dispatch(layoutActions.setMenuCollapsed(parsed.isMenuCollapsed));
+    dispatch(layoutActions.setViewMode(parsed.viewMode));
     setImportError(null);
     event.target.value = "";
   };
