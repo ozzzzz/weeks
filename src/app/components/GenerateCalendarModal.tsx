@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { Button, CopyButton, Modal, ScrollArea, Stack, Text, Textarea } from "@mantine/core";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 
-const PROMPT_TEMPLATE = `To generate a calendar for me, please:
+const PROMPT_TEMPLATE = `To generate a life calendar for me, please:
 1. Use my birthday: [YOUR BIRTHDAY]
 2. Extract key life events and periods from one or more of these sources:
    - My LinkedIn profile: [YOUR LINKEDIN URL]
@@ -13,30 +12,62 @@ const PROMPT_TEMPLATE = `To generate a calendar for me, please:
 3. Return a JSON object in this exact format:
 
 {
-  "name": "My Life Calendar",
-  "events": [
-    {
-      "id": "unique-string",
-      "label": "Graduated university",
-      "date": { "year": 2014, "month": 6, "day": 20 },
-      "color": "#ef4444"
+  "profile": {
+    "name": "Your Full Name",
+    "dateOfBirth": {
+      "year": 1993,
+      "month": 1,
+      "day": 30
     },
+    "realExpectancyYears": 80,
+    "extraExpectancyYears": 20
+  },
+  "calendars": [
     {
       "id": "unique-string",
-      "label": "Started first job",
-      "date": { "year": 2014, "month": 9 },
-      "color": "#3b82f6"
+      "name": "Calendar Name",
+      "events": [
+        {
+          "id": "unique-string",
+          "label": "Graduated university",
+          "date": {
+            "year": 2014,
+            "month": 6,
+            "day": 20
+          },
+          "color": "#ef4444"
+        },
+        {
+          "id": "unique-string",
+          "label": "Started first job",
+          "date": {
+            "year": 2014,
+            "month": 9
+          },
+          "color": "#3b82f6"
+        }
+      ],
+      "periods": [
+        {
+          "id": "unique-string",
+          "label": "University",
+          "start": {
+            "year": 2010,
+            "month": 9
+          },
+          "end": {
+            "year": 2014,
+            "month": 6
+          },
+          "color": "#8b5cf6"
+        }
+      ],
+      "isVisible": true
     }
   ],
-  "periods": [
-    {
-      "id": "unique-string",
-      "label": "University",
-      "start": { "year": 2010, "month": 9 },
-      "end": { "year": 2014, "month": 6 },
-      "color": "#8b5cf6"
-    }
-  ]
+  "activeCalendarId": "unique-string",
+  "isMenuCollapsed": false,
+  "viewMode": "weeks"
 }
 
 Notes on dates:
@@ -64,14 +95,6 @@ const GenerateCalendarModal = ({ opened, onClose }: Props) => {
           it into any LLM (ChatGPT, Claude, Gemini, etc.):
         </Text>
 
-        <Textarea
-          value={PROMPT_TEMPLATE}
-          readOnly
-          autosize
-          minRows={10}
-          styles={{ input: { fontFamily: "monospace", fontSize: 13 } }}
-        />
-
         <CopyButton value={PROMPT_TEMPLATE}>
           {({ copied, copy }) => (
             <Button
@@ -86,6 +109,14 @@ const GenerateCalendarModal = ({ opened, onClose }: Props) => {
             </Button>
           )}
         </CopyButton>
+
+        <Textarea
+          value={PROMPT_TEMPLATE}
+          readOnly
+          autosize
+          minRows={10}
+          styles={{ input: { fontFamily: "monospace", fontSize: 13 } }}
+        />
       </Stack>
     </Modal>
   );

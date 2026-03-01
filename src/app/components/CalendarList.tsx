@@ -32,6 +32,7 @@ const CalendarList = () => {
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [generateModalOpen, setGenerateModalOpen] = useState(false);
 
   useEffect(() => {
     if (!activeCalendarId && calendars.length > 0) {
@@ -242,6 +243,21 @@ const CalendarList = () => {
       >
         Add Calendar
       </Button>
+
+      <Button
+        leftSection={<IconSparkles size={14} />}
+        variant="subtle"
+        color="dark"
+        size="xs"
+        onClick={() => setGenerateModalOpen(true)}
+      >
+        Generate Calendar
+      </Button>
+
+      <GenerateCalendarModal
+        opened={generateModalOpen}
+        onClose={() => setGenerateModalOpen(false)}
+      />
     </Stack>
   );
 };
