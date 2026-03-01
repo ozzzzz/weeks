@@ -16,11 +16,13 @@ import {
   IconEdit,
   IconCheck,
   IconX,
+  IconSparkles,
 } from "@tabler/icons-react";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import { calendarActions, layoutActions } from "../store";
 import { Calendar } from "../types";
 import CalendarDetail from "./CalendarDetail";
+import GenerateCalendarModal from "./GenerateCalendarModal";
 
 const CalendarList = () => {
   const dispatch = useAppDispatch();

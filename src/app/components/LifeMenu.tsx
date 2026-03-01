@@ -14,7 +14,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { SectionLabel, ErrorText } from "./ui/text";
+import { SectionLabel } from "./ui/text";
 import { DateInput } from "@mantine/dates";
 import {
   IconChevronLeft,
@@ -176,7 +176,7 @@ const LifeMenu = () => {
         <div style={{ width: SIDEBAR_WIDTH, height: "100%" }}>
           <ScrollArea h="100%" offsetScrollbars>
             <Stack gap="md" p="md">
-              <Tabs defaultValue="profile" variant="pills" color="dark">
+              <Tabs defaultValue="profile" variant="pills" color="dark" keepMounted={false}>
                 <Tabs.List grow>
                   <Tabs.Tab value="profile">Profile</Tabs.Tab>
                   <Tabs.Tab value="calendars">Calendars</Tabs.Tab>
