@@ -91,10 +91,7 @@ const MonthsVisualization = () => {
   const isMenuCollapsed = useAppSelector(
     (state) => state.layout.isMenuCollapsed,
   );
-  const themeState = useAppSelector((state) => state.theme);
-  const activeTheme =
-    themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ??
-    themeState.themes[0];
+  const weekColors = useAppSelector((state) => state.life.weekColors);
 
   const months = useMemo(() => buildMonthPoints(lifeProfile), [lifeProfile]);
 
@@ -201,11 +198,11 @@ const MonthsVisualization = () => {
 
   const colorMap = useMemo(
     () => ({
-      lived: new THREE.Color(activeTheme?.weeks.lived ?? "#1e293b"),
-      remaining: new THREE.Color(activeTheme?.weeks.remaining ?? "#e2e8f0"),
-      extra: new THREE.Color(activeTheme?.weeks.extra ?? "#fcd34d"),
+      lived: new THREE.Color(weekColors.lived),
+      remaining: new THREE.Color(weekColors.remaining),
+      extra: new THREE.Color(weekColors.extra),
     }),
-    [activeTheme],
+    [weekColors],
   );
 
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
@@ -304,12 +301,9 @@ const MonthsVisualization = () => {
 
   useEffect(() => {
     if (rendererRef.current) {
-      rendererRef.current.setClearColor(
-        activeTheme?.background ?? "#f8fafc",
-        1,
-      );
+      rendererRef.current.setClearColor("#f8fafc", 1);
     }
-  }, [activeTheme]);
+  }, []);
 
   const updateLayout = useCallback(
     (animateOnly = false) => {
@@ -640,9 +634,7 @@ const MonthsVisualization = () => {
     periodMeshesRef.current = [];
 
     // Create period background meshes, one per period to lock in color
-    const backgroundColor = new THREE.Color(
-      activeTheme?.background ?? "#f8fafc",
-    );
+    const backgroundColor = new THREE.Color("#f8fafc");
 
     periodInstances.forEach((instance) => {
       const planeGeometry = new THREE.PlaneGeometry(1, 1);

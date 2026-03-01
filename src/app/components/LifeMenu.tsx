@@ -34,7 +34,6 @@ import {
   calendarActions,
   lifeActions,
   layoutActions,
-  themeActions,
 } from "../store";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import CalendarList from "./CalendarList";
@@ -52,20 +51,12 @@ const LifeMenu = () => {
     (state) => state.layout.isMenuCollapsed,
   );
   const viewMode = useAppSelector((state) => state.layout.viewMode);
-  const themeState = useAppSelector((state) => state.theme);
+  const weekColors = useAppSelector((state) => state.life.weekColors);
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const activeTheme =
-    themeState.themes.find((t) => t.id === themeState.activeThemeId) ??
-    themeState.themes[0];
   const handleColorChange =
     (key: "lived" | "remaining" | "extra") => (value: string) => {
-      dispatch(
-        themeActions.upsertTheme({
-          ...activeTheme,
-          weeks: { ...activeTheme.weeks, [key]: value },
-        }),
-      );
+      dispatch(lifeActions.setWeekColor({ key, value }));
     };
 
   const birthdateAsDate = partialDateToDate(lifeProfile.dateOfBirth);
@@ -80,13 +71,11 @@ const LifeMenu = () => {
   const handleRealExpectancyChange = (value: string | number) => {
     if (typeof value !== "number") return;
     dispatch(lifeActions.setRealExpectancyYears(value));
-    dispatch(lifeActions.setExtraExpectancyYears(100 - value));
   };
 
   const handleExtraExpectancyChange = (value: string | number) => {
     if (typeof value !== "number") return;
     dispatch(lifeActions.setExtraExpectancyYears(value));
-    dispatch(lifeActions.setRealExpectancyYears(100 - value));
   };
 
   const toggleMenu = () => {
@@ -122,9 +111,9 @@ const LifeMenu = () => {
   const handleSaveData = () => {
     downloadPersistedState({
       profile: lifeProfile,
+      weekColors,
       calendars,
       activeCalendarId,
-      isMenuCollapsed,
       viewMode,
     });
   };
@@ -147,9 +136,9 @@ const LifeMenu = () => {
     }
 
     dispatch(lifeActions.setLifeProfile(parsed.profile));
+    dispatch(lifeActions.setWeekColors(parsed.weekColors));
     dispatch(calendarActions.setCalendars(parsed.calendars));
     dispatch(calendarActions.setActiveCalendar(parsed.activeCalendarId));
-    dispatch(layoutActions.setMenuCollapsed(parsed.isMenuCollapsed));
     dispatch(layoutActions.setViewMode(parsed.viewMode));
     setImportError(null);
     event.target.value = "";
@@ -209,11 +198,10 @@ const LifeMenu = () => {
                         label="Extra years"
                         value={lifeProfile.extraExpectancyYears}
                         min={0}
-                        max={100}
+                        max={50}
                         style={{ flex: 1 }}
                         onChange={handleExtraExpectancyChange}
                       />
-                      <Text pb={6}>= 100</Text>
                     </Group>
 
                     <Divider />
@@ -224,7 +212,7 @@ const LifeMenu = () => {
                         <ColorInput
                           key={key}
                           label={key.charAt(0).toUpperCase() + key.slice(1)}
-                          value={activeTheme.weeks[key]}
+                          value={weekColors[key]}
                           onChange={handleColorChange(key)}
                           swatchesPerRow={9}
                         />
