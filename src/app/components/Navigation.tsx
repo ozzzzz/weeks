@@ -41,43 +41,37 @@ const Navigation = ({ viewMode, onViewModeChange }: NavigationProps) => {
 
   const colorForStatus = (status: WeekStatus) => activeTheme?.weeks[status] ?? '#ccc';
 
+  const otherMode = viewMode === 'weeks' ? 'months' : 'weeks';
+
   return (
     <header>
       <Container fluid px="lg" py="xs">
         <Group gap="md" align="center">
-          <Text size="sm" fw={600} component={Link} to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Text
+            size="sm"
+            fw={600}
+            component={Link}
+            to="/"
+            style={{ textDecoration: 'none', color: 'inherit', display: 'inline-block', minWidth: '3.8rem' }}
+          >
             {viewMode === 'weeks' ? 'Weeks' : 'Months'}
           </Text>
-          <Group gap={4}>
-            <button
-              onClick={() => onViewModeChange('weeks')}
-              style={{
-                fontSize: '0.7rem',
-                padding: '1px 6px',
-                borderRadius: 4,
-                border: '1px solid currentColor',
-                cursor: 'pointer',
-                background: viewMode === 'weeks' ? '#1c1c1c' : 'transparent',
-                color: viewMode === 'weeks' ? '#fff' : 'inherit',
-              }}
-            >
-              W
-            </button>
-            <button
-              onClick={() => onViewModeChange('months')}
-              style={{
-                fontSize: '0.7rem',
-                padding: '1px 6px',
-                borderRadius: 4,
-                border: '1px solid currentColor',
-                cursor: 'pointer',
-                background: viewMode === 'months' ? '#1c1c1c' : 'transparent',
-                color: viewMode === 'months' ? '#fff' : 'inherit',
-              }}
-            >
-              M
-            </button>
-          </Group>
+          <button
+            onClick={() => onViewModeChange(otherMode)}
+            style={{
+              fontSize: '0.7rem',
+              padding: '1px 6px',
+              borderRadius: 4,
+              border: '1px solid currentColor',
+              cursor: 'pointer',
+              background: 'transparent',
+              color: 'inherit',
+              opacity: 0.45,
+              minWidth: '7.2rem',
+            }}
+          >
+            Switch to {otherMode === 'weeks' ? 'Weeks' : 'Months'}
+          </button>
           {statusOrder.map((status) => (
             <Group key={status} gap={4}>
               <Text component="span" size="xs" style={{ color: colorForStatus(status), lineHeight: 1 }}>●</Text>
