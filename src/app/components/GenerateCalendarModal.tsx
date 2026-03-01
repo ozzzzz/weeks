@@ -1,6 +1,14 @@
 "use client";
 
-import { Button, CopyButton, Modal, ScrollArea, Stack, Text, Textarea } from "@mantine/core";
+import {
+  Button,
+  CopyButton,
+  Modal,
+  ScrollArea,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 
 const PROMPT_TEMPLATE = `To generate a life calendar for me, please:
@@ -22,13 +30,18 @@ const PROMPT_TEMPLATE = `To generate a life calendar for me, please:
     "realExpectancyYears": 80,
     "extraExpectancyYears": 20
   },
+  "weekColors": {
+    "lived": "#0f2d52",
+    "remaining": "#7dd3fc",
+    "extra": "#e0f2fe"
+  },
   "calendars": [
     {
-      "id": "unique-string",
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "name": "Calendar Name",
       "events": [
         {
-          "id": "unique-string",
+          "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
           "label": "Graduated university",
           "date": {
             "year": 2014,
@@ -38,7 +51,7 @@ const PROMPT_TEMPLATE = `To generate a life calendar for me, please:
           "color": "#ef4444"
         },
         {
-          "id": "unique-string",
+          "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
           "label": "Started first job",
           "date": {
             "year": 2014,
@@ -49,7 +62,7 @@ const PROMPT_TEMPLATE = `To generate a life calendar for me, please:
       ],
       "periods": [
         {
-          "id": "unique-string",
+          "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
           "label": "University",
           "start": {
             "year": 2010,
@@ -65,15 +78,18 @@ const PROMPT_TEMPLATE = `To generate a life calendar for me, please:
       "isVisible": true
     }
   ],
-  "activeCalendarId": "unique-string",
-  "isMenuCollapsed": false,
-  "viewMode": "weeks"
+  "activeCalendarId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "viewMode": "months"
 }
 
 Notes on dates:
 - "year" is required
 - "month" is optional (1 = January, 12 = December)
-- "day" is optional`;
+- "day" is optional
+
+Notes on IDs:
+- Every "id" must be a unique UUID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+- "activeCalendarId" must match one of the calendar "id" values`;
 
 type Props = {
   opened: boolean;
@@ -98,7 +114,9 @@ const GenerateCalendarModal = ({ opened, onClose }: Props) => {
         <CopyButton value={PROMPT_TEMPLATE}>
           {({ copied, copy }) => (
             <Button
-              leftSection={copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+              leftSection={
+                copied ? <IconCheck size={14} /> : <IconCopy size={14} />
+              }
               variant="light"
               color={copied ? "green" : "dark"}
               size="xs"

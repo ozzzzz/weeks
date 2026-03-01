@@ -4,9 +4,11 @@ export interface WeekColors {
   extra: string;
 }
 
+export type ViewMode = 'weeks' | 'months';
+
 export interface LayoutState {
   isMenuCollapsed: boolean;
-  viewMode: 'weeks' | 'months';
+  viewMode: ViewMode;
   focusWeekIndex: number | null;
   resetView: boolean;
   hoveredEventId: string | null;

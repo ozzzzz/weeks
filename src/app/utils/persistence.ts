@@ -1,4 +1,4 @@
-import { Calendar, LifeProfile, WeekColors } from '../types';
+import { Calendar, LifeProfile, ViewMode, WeekColors } from '../types';
 import { defaultWeekColors } from '../store';
 
 const STORAGE_KEY = 'weeks:state:v1';
@@ -8,7 +8,7 @@ export interface PersistedState {
   weekColors: WeekColors;
   calendars: Calendar[];
   activeCalendarId: string | null;
-  viewMode: 'weeks' | 'months';
+  viewMode: ViewMode;
 }
 
 export const savePersistedState = (state: PersistedState) => {
@@ -65,7 +65,7 @@ const isValidRaw = (value: unknown): value is Record<string, unknown> => {
     Array.isArray(value.calendars) &&
     (value.calendars as unknown[]).every(isCalendar) &&
     (value.activeCalendarId === null || typeof value.activeCalendarId === 'string') &&
-    (value.viewMode === undefined || value.viewMode === 'weeks' || value.viewMode === 'months')
+    (value.viewMode === undefined || value.viewMode === 'weeks' || value.viewMode === 'months') // ViewMode values
   );
 };
 
@@ -80,7 +80,7 @@ const normalizePersistedState = (raw: Record<string, unknown>): PersistedState =
     isVisible: typeof c.isVisible === 'boolean' ? c.isVisible : true,
   })),
   activeCalendarId: (raw.activeCalendarId as string | null) ?? null,
-  viewMode: (raw.viewMode as 'weeks' | 'months') ?? 'weeks',
+  viewMode: (raw.viewMode as ViewMode) ?? 'weeks',
 });
 
 export const parsePersistedState = (json: string): PersistedState | null => {

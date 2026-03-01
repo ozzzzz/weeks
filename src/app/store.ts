@@ -8,6 +8,7 @@ import {
     EXTRA_LIFE_EXPECTANCY_YEARS,
     Calendar,
     WeekColors,
+    ViewMode,
 } from './types';
 import { clampRealExpectancyYears, clampExtraExpectancyYears } from './utils/calculations';
 
@@ -209,7 +210,7 @@ const layoutSlice = createSlice({
             state.hoveredPeriodId = action.payload;
             if (action.payload) state.hoveredEventId = null;
         },
-        setViewMode(state, action: PayloadAction<'weeks' | 'months'>) {
+        setViewMode(state, action: PayloadAction<ViewMode>) {
             state.viewMode = action.payload;
         },
     },

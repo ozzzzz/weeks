@@ -65,7 +65,11 @@ const LifeMenu = () => {
     if (!value) return;
     const [year, month, day] = value.split("-").map(Number);
     if (!year || isNaN(year)) return;
-    dispatch(lifeActions.setDateOfBirth({ year, month, day }));
+    dispatch(lifeActions.setDateOfBirth({
+      year,
+      ...(month ? { month } : {}),
+      ...(day ? { day } : {}),
+    }));
   };
 
   const handleRealExpectancyChange = (value: string | number) => {
