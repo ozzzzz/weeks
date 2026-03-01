@@ -15,6 +15,7 @@ const App = () => {
       store.dispatch(calendarActions.setCalendars(persisted.calendars));
       store.dispatch(calendarActions.setActiveCalendar(persisted.activeCalendarId));
       store.dispatch(layoutActions.setMenuCollapsed(persisted.isMenuCollapsed));
+      store.dispatch(layoutActions.setViewMode(persisted.viewMode));
     }
 
     const unsubscribe = store.subscribe(() => {
@@ -24,6 +25,7 @@ const App = () => {
         calendars: state.calendar.calendars,
         activeCalendarId: state.calendar.activeCalendarId,
         isMenuCollapsed: state.layout.isMenuCollapsed,
+        viewMode: state.layout.viewMode,
       });
     });
 

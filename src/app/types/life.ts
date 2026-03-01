@@ -17,3 +17,9 @@ export interface WeekPoint {
   date: Date;
   status: WeekStatus;
 }
+
+export interface MonthPoint {
+  index: number;
+  date: Date;
+  status: WeekStatus;
+}

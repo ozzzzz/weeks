@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Accordion,
   ActionIcon,
@@ -16,11 +16,13 @@ import {
   IconEdit,
   IconCheck,
   IconX,
+  IconSparkles,
 } from "@tabler/icons-react";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import { calendarActions, layoutActions } from "../store";
 import { Calendar } from "../types";
 import CalendarDetail from "./CalendarDetail";
+import GenerateCalendarModal from "./GenerateCalendarModal";
 
 const CalendarList = () => {
   const dispatch = useAppDispatch();
@@ -30,6 +32,13 @@ const CalendarList = () => {
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [generateModalOpen, setGenerateModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!activeCalendarId && calendars.length > 0) {
+      dispatch(calendarActions.setActiveCalendar(calendars[0].id));
+    }
+  }, [activeCalendarId, calendars, dispatch]);
 
   const handleKeyActivate =
     (action: () => void) => (e: React.KeyboardEvent) => {
@@ -234,6 +243,21 @@ const CalendarList = () => {
       >
         Add Calendar
       </Button>
+
+      <Button
+        leftSection={<IconSparkles size={14} />}
+        variant="subtle"
+        color="dark"
+        size="xs"
+        onClick={() => setGenerateModalOpen(true)}
+      >
+        Generate Calendar
+      </Button>
+
+      <GenerateCalendarModal
+        opened={generateModalOpen}
+        onClose={() => setGenerateModalOpen(false)}
+      />
     </Stack>
   );
 };

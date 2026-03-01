@@ -6,39 +6,72 @@ import { ActionIcon, Anchor, Container, Group, Text } from '@mantine/core';
 import { IconBrandGithub } from '@tabler/icons-react';
 import { useAppSelector } from '../hooks';
 import { buildWeekPoints } from '../utils/weeks';
+import { buildMonthPoints } from '../utils/months';
 import { WeekStatus } from '../types';
 import { MetaText } from './ui/text';
 
 const statusOrder: WeekStatus[] = ['lived', 'remaining', 'extra'];
 
-const Navigation = () => {
+interface NavigationProps {
+  viewMode: 'weeks' | 'months';
+  onViewModeChange: (mode: 'weeks' | 'months') => void;
+}
+
+const Navigation = ({ viewMode, onViewModeChange }: NavigationProps) => {
   const lifeProfile = useAppSelector((state) => state.life.profile);
   const themeState = useAppSelector((state) => state.theme);
   const activeTheme = themeState.themes.find((t) => t.id === themeState.activeThemeId) ?? themeState.themes[0];
 
-  const weeks = useMemo(() => buildWeekPoints(lifeProfile), [lifeProfile]);
+  const points = useMemo(
+    () => viewMode === 'weeks' ? buildWeekPoints(lifeProfile) : buildMonthPoints(lifeProfile),
+    [lifeProfile, viewMode],
+  );
 
   const statusCounts = useMemo(
     () =>
-      weeks.reduce<Record<WeekStatus, number>>(
-        (acc, week) => {
-          acc[week.status] += 1;
+      points.reduce<Record<WeekStatus, number>>(
+        (acc, point) => {
+          acc[point.status] += 1;
           return acc;
         },
         { lived: 0, remaining: 0, extra: 0 },
       ),
-    [weeks],
+    [points],
   );
 
   const colorForStatus = (status: WeekStatus) => activeTheme?.weeks[status] ?? '#ccc';
+
+  const otherMode = viewMode === 'weeks' ? 'months' : 'weeks';
 
   return (
     <header>
       <Container fluid px="lg" py="xs">
         <Group gap="md" align="center">
-          <Text size="sm" fw={600} component={Link} to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            Weeks
+          <Text
+            size="sm"
+            fw={600}
+            component={Link}
+            to="/"
+            style={{ textDecoration: 'none', color: 'inherit', display: 'inline-block', minWidth: '3.8rem' }}
+          >
+            {viewMode === 'weeks' ? 'Weeks' : 'Months'}
           </Text>
+          <button
+            onClick={() => onViewModeChange(otherMode)}
+            style={{
+              fontSize: '0.7rem',
+              padding: '1px 6px',
+              borderRadius: 4,
+              border: '1px solid currentColor',
+              cursor: 'pointer',
+              background: 'transparent',
+              color: 'inherit',
+              opacity: 0.45,
+              minWidth: '7.2rem',
+            }}
+          >
+            Switch to {otherMode === 'weeks' ? 'Weeks' : 'Months'}
+          </button>
           {statusOrder.map((status) => (
             <Group key={status} gap={4}>
               <Text component="span" size="xs" style={{ color: colorForStatus(status), lineHeight: 1 }}>●</Text>

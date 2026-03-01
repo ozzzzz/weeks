@@ -5,8 +5,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useAppSelector, useAppDispatch } from "../hooks";
 import { layoutActions } from "../store";
-import { buildWeekPoints } from "../utils/weeks";
-import { buildWeekOverlays, dateToWeekIndex } from "../utils/calendar";
+import { buildMonthPoints } from "../utils/months";
+import { buildMonthOverlays, dateToMonthIndex } from "../utils/calendar";
 import { formatDisplayDate, formatPartialDate } from "../utils/dates";
 import {
   WeekStatus,
@@ -43,10 +43,10 @@ const HOVER_LIFT_Z = 0.14;
 const HOVER_EASING = 0.14;
 const HOVER_EPSILON = 0.002;
 const HOVER_FLOAT_SPEED = 0.004;
-const WEEKS_PER_DECADE = 52 * 10;
+const MONTHS_PER_DECADE = 12 * 10;
 const DECADE_GAP_RATIO = 0.5;
 
-const WeeksVisualization = () => {
+const MonthsVisualization = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -68,7 +68,7 @@ const WeeksVisualization = () => {
   const updateLayoutRef = useRef<(animateOnly?: boolean) => void>(() => {});
   const didSetInitialZoom = useRef(false);
   const dummyRef = useRef(new THREE.Object3D());
-  const hoveredEventWeekIndicesRef = useRef<Set<number>>(new Set());
+  const hoveredEventMonthIndicesRef = useRef<Set<number>>(new Set());
   const hoverProgressRef = useRef<Float32Array>(new Float32Array(0));
   const periodBgHoverProgressRef = useRef<Float32Array>(new Float32Array(0));
   const hoveredPeriodInstanceIndexRef = useRef<number>(-1);
@@ -96,107 +96,107 @@ const WeeksVisualization = () => {
     themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ??
     themeState.themes[0];
 
-  const weeks = useMemo(() => buildWeekPoints(lifeProfile), [lifeProfile]);
+  const months = useMemo(() => buildMonthPoints(lifeProfile), [lifeProfile]);
 
   const activeCalendars = useMemo(() => {
     if (!activeCalendarId) return calendars;
     return calendars.filter((calendar) => calendar.id === activeCalendarId);
   }, [calendars, activeCalendarId]);
 
-  const weekOverlays = useMemo(
+  const monthOverlays = useMemo(
     () =>
-      buildWeekOverlays(weeks.length, activeCalendars, lifeProfile.dateOfBirth),
-    [weeks.length, activeCalendars, lifeProfile.dateOfBirth],
+      buildMonthOverlays(months.length, activeCalendars, lifeProfile.dateOfBirth),
+    [months.length, activeCalendars, lifeProfile.dateOfBirth],
   );
 
   const periodInstances = useMemo(() => {
-    const totalWeeks = weeks.length;
-    if (totalWeeks === 0) return [];
+    const totalMonths = months.length;
+    if (totalMonths === 0) return [];
 
     return activeCalendars.flatMap((calendar) =>
       calendar.periods
         .map((period) => {
-          const startWeek = dateToWeekIndex(
+          const startWeek = dateToMonthIndex(
             period.start,
             lifeProfile.dateOfBirth,
           );
-          const endWeek = dateToWeekIndex(period.end, lifeProfile.dateOfBirth);
-          const start = Math.max(0, Math.min(totalWeeks - 1, startWeek));
-          const end = Math.max(0, Math.min(totalWeeks - 1, endWeek));
+          const endWeek = dateToMonthIndex(period.end, lifeProfile.dateOfBirth);
+          const start = Math.max(0, Math.min(totalMonths - 1, startWeek));
+          const end = Math.max(0, Math.min(totalMonths - 1, endWeek));
 
-          if (end < 0 || start > totalWeeks - 1 || end < start) {
+          if (end < 0 || start > totalMonths - 1 || end < start) {
             return null;
           }
 
-          const weekIndices: number[] = [];
+          const monthIndices: number[] = [];
           for (let i = start; i <= end; i += 1) {
-            weekIndices.push(i);
+            monthIndices.push(i);
           }
 
-          return { period, weekIndices };
+          return { period, monthIndices };
         })
         .filter(
           (
             entry,
           ): entry is {
             period: (typeof calendar.periods)[number];
-            weekIndices: number[];
+            monthIndices: number[];
           } => !!entry,
         ),
     );
-  }, [activeCalendars, lifeProfile.dateOfBirth, weeks.length]);
+  }, [activeCalendars, lifeProfile.dateOfBirth, months.length]);
 
   // Only event hover drives dot animation; period hover drives background expansion
-  const hoveredEventWeekIndices = useMemo(() => {
+  const hoveredEventMonthIndices = useMemo(() => {
     const indices = new Set<number>();
     if (!hoveredEventId) return indices;
 
     for (const calendar of activeCalendars) {
       const event = calendar.events.find((item) => item.id === hoveredEventId);
       if (!event) continue;
-      const weekIndex = dateToWeekIndex(event.date, lifeProfile.dateOfBirth);
-      if (weekIndex >= 0 && weekIndex < weeks.length) {
-        indices.add(weekIndex);
+      const monthIndex = dateToMonthIndex(event.date, lifeProfile.dateOfBirth);
+      if (monthIndex >= 0 && monthIndex < months.length) {
+        indices.add(monthIndex);
       }
       break;
     }
     return indices;
-  }, [hoveredEventId, activeCalendars, lifeProfile.dateOfBirth, weeks.length]);
+  }, [hoveredEventId, activeCalendars, lifeProfile.dateOfBirth, months.length]);
 
   const eventInstances = useMemo(() => {
-    const colorToWeekIndices = new Map<string, number[]>();
+    const colorToMonthIndices = new Map<string, number[]>();
 
-    weekOverlays.forEach((overlay, weekIndex) => {
+    monthOverlays.forEach((overlay, monthIndex) => {
       if (overlay.events.length === 0) return;
       const latestEvent = overlay.events[overlay.events.length - 1];
       const color = latestEvent?.color || DEFAULT_EVENT_COLOR;
       const key = color.trim() || DEFAULT_EVENT_COLOR;
-      const existing = colorToWeekIndices.get(key);
+      const existing = colorToMonthIndices.get(key);
       if (existing) {
-        existing.push(weekIndex);
+        existing.push(monthIndex);
         return;
       }
-      colorToWeekIndices.set(key, [weekIndex]);
+      colorToMonthIndices.set(key, [monthIndex]);
     });
 
-    return Array.from(colorToWeekIndices.entries()).map(
-      ([color, weekIndices]) => ({
+    return Array.from(colorToMonthIndices.entries()).map(
+      ([color, monthIndices]) => ({
         color,
-        weekIndices,
+        monthIndices,
       }),
     );
-  }, [weekOverlays]);
+  }, [monthOverlays]);
 
   const statusCounts = useMemo(
     () =>
-      weeks.reduce<Record<WeekStatus, number>>(
-        (acc, week) => {
-          acc[week.status] += 1;
+      months.reduce<Record<WeekStatus, number>>(
+        (acc, month) => {
+          acc[month.status] += 1;
           return acc;
         },
         { lived: 0, remaining: 0, extra: 0 },
       ),
-    [weeks],
+    [months],
   );
 
   const colorMap = useMemo(
@@ -319,7 +319,7 @@ const WeeksVisualization = () => {
       const meshes = meshRefs.current;
       const dummy = dummyRef.current;
 
-      if (!container || !renderer || !camera || weeks.length === 0) return;
+      if (!container || !renderer || !camera || months.length === 0) return;
 
       let cols: number;
       let rows: number;
@@ -375,8 +375,9 @@ const WeeksVisualization = () => {
           candidateCols <= maxColumns;
           candidateCols += 1
         ) {
-          const candidateRows = Math.ceil(weeks.length / candidateCols);
-          const candidateNumGaps = Math.floor((candidateRows - 1) * candidateCols / WEEKS_PER_DECADE);
+          if (MONTHS_PER_DECADE % candidateCols !== 0) continue;
+          const candidateRows = Math.ceil(months.length / candidateCols);
+          const candidateNumGaps = Math.floor((candidateRows - 1) * candidateCols / MONTHS_PER_DECADE);
           const candidateCellSize = Math.min(
             width / candidateCols,
             height / (candidateRows + candidateNumGaps * DECADE_GAP_RATIO),
@@ -388,9 +389,9 @@ const WeeksVisualization = () => {
         }
 
         cols = bestCols;
-        rows = Math.ceil(weeks.length / cols);
+        rows = Math.ceil(months.length / cols);
         cellSize = bestCell;
-        const numGaps = Math.floor((rows - 1) * cols / WEEKS_PER_DECADE);
+        const numGaps = Math.floor((rows - 1) * cols / MONTHS_PER_DECADE);
         startX = -((cols * cellSize) / 2) + cellSize / 2;
         startY = (rows * cellSize + numGaps * cellSize * DECADE_GAP_RATIO) / 2 - cellSize / 2;
 
@@ -409,32 +410,32 @@ const WeeksVisualization = () => {
       const thickness = Math.max(0.6, radius * 0.3);
       const now = performance.now();
       const getItemY = (index: number, row: number): number => {
-        const decade = Math.floor((row * cols) / WEEKS_PER_DECADE);
+        const decade = Math.floor((row * cols) / MONTHS_PER_DECADE);
         return startY - row * cellSize - decade * cellSize * DECADE_GAP_RATIO;
       };
 
-      if (hoverProgressRef.current.length !== weeks.length) {
-        hoverProgressRef.current = new Float32Array(weeks.length);
+      if (hoverProgressRef.current.length !== months.length) {
+        hoverProgressRef.current = new Float32Array(months.length);
       }
       const hoverProgress = hoverProgressRef.current;
-      const hoveredEventWeekIndicesSet = hoveredEventWeekIndicesRef.current;
+      const hoveredEventMonthIndicesSet = hoveredEventMonthIndicesRef.current;
       let hasEventTransition = false;
 
-      const getHoverValue = (weekIndex: number) => {
-        const target = hoveredEventWeekIndicesSet.has(weekIndex) ? 1 : 0;
-        const current = hoverProgress[weekIndex] ?? 0;
+      const getHoverValue = (monthIndex: number) => {
+        const target = hoveredEventMonthIndicesSet.has(monthIndex) ? 1 : 0;
+        const current = hoverProgress[monthIndex] ?? 0;
         const next = current + (target - current) * HOVER_EASING;
         const snapped = Math.abs(target - next) < HOVER_EPSILON ? target : next;
         if (snapped !== target) {
           hasEventTransition = true;
         }
-        hoverProgress[weekIndex] = snapped;
+        hoverProgress[monthIndex] = snapped;
         return snapped;
       };
 
-      const getFloatMultiplier = (hoverAmount: number, weekIndex: number) =>
+      const getFloatMultiplier = (hoverAmount: number, monthIndex: number) =>
         hoverAmount > 0
-          ? ((Math.sin(now * HOVER_FLOAT_SPEED + weekIndex * 0.35) + 1) / 2) *
+          ? ((Math.sin(now * HOVER_FLOAT_SPEED + monthIndex * 0.35) + 1) / 2) *
             hoverAmount
           : 0;
 
@@ -450,18 +451,18 @@ const WeeksVisualization = () => {
         mesh.count = statusCounts[status];
       });
 
-      // Position week circles — only event hover scales dots
-      for (let index = 0; index < weeks.length; index += 1) {
+      // Position month circles — only event hover scales dots
+      for (let index = 0; index < months.length; index += 1) {
         const col = index % cols;
         const row = Math.floor(index / cols);
         const x = startX + col * cellSize;
         const y = getItemY(index, row);
 
-        const week = weeks[index];
-        const mesh = meshes[week.status];
+        const month = months[index];
+        const mesh = meshes[month.status];
         if (!mesh) continue;
 
-        const offset = statusOffsets[week.status];
+        const offset = statusOffsets[month.status];
         const hoverAmount = getHoverValue(index);
         const floatAmount = getFloatMultiplier(hoverAmount, index);
         const scaleMultiplier =
@@ -480,7 +481,7 @@ const WeeksVisualization = () => {
         dummy.updateMatrix();
         mesh.setMatrixAt(offset, dummy.matrix);
 
-        statusOffsets[week.status] += 1;
+        statusOffsets[month.status] += 1;
       }
 
       statusOrder.forEach((status) => {
@@ -514,19 +515,19 @@ const WeeksVisualization = () => {
         const bgWidth = cellSize * expand;
         const bgHeight = (cellSize / 1.8) * expand;
 
-        instance.weekIndices.forEach((weekIndex, weekOffset) => {
-          const col = weekIndex % cols;
-          const row = Math.floor(weekIndex / cols);
+        instance.monthIndices.forEach((monthIndex, monthOffset) => {
+          const col = monthIndex % cols;
+          const row = Math.floor(monthIndex / cols);
           const x = startX + col * cellSize;
-          const y = getItemY(weekIndex, row);
+          const y = getItemY(monthIndex, row);
 
           dummy.position.set(x, y, -0.08);
           dummy.scale.set(bgWidth, bgHeight, 1);
           dummy.updateMatrix();
-          mesh.setMatrixAt(weekOffset, dummy.matrix);
+          mesh.setMatrixAt(monthOffset, dummy.matrix);
         });
 
-        mesh.count = instance.weekIndices.length;
+        mesh.count = instance.monthIndices.length;
         mesh.instanceMatrix.needsUpdate = true;
       });
 
@@ -535,13 +536,13 @@ const WeeksVisualization = () => {
         const instance = eventInstances[index];
         if (!instance) return;
 
-        instance.weekIndices.forEach((weekIndex, weekOffset) => {
-          const col = weekIndex % cols;
-          const row = Math.floor(weekIndex / cols);
+        instance.monthIndices.forEach((monthIndex, monthOffset) => {
+          const col = monthIndex % cols;
+          const row = Math.floor(monthIndex / cols);
           const x = startX + col * cellSize;
-          const y = getItemY(weekIndex, row);
-          const hoverAmount = hoverProgress[weekIndex] ?? 0;
-          const floatAmount = getFloatMultiplier(hoverAmount, weekIndex);
+          const y = getItemY(monthIndex, row);
+          const hoverAmount = hoverProgress[monthIndex] ?? 0;
+          const floatAmount = getFloatMultiplier(hoverAmount, monthIndex);
           const scaleMultiplier =
             1 + hoverAmount * (EVENT_HOVER_SCALE_MULTIPLIER - 1);
           const yOffset =
@@ -556,21 +557,21 @@ const WeeksVisualization = () => {
             thickness,
           );
           dummy.updateMatrix();
-          mesh.setMatrixAt(weekOffset, dummy.matrix);
+          mesh.setMatrixAt(monthOffset, dummy.matrix);
         });
 
-        mesh.count = instance.weekIndices.length;
+        mesh.count = instance.monthIndices.length;
         mesh.instanceMatrix.needsUpdate = true;
       });
 
       hoverAnimationActiveRef.current =
-        hoveredEventWeekIndicesSet.size > 0 ||
+        hoveredEventMonthIndicesSet.size > 0 ||
         hasEventTransition ||
         hoveredPeriodIdx >= 0 ||
         hasPeriodTransition ||
         hasCameraTransition;
     },
-    [weeks, statusCounts, periodInstances, eventInstances],
+    [months, statusCounts, periodInstances, eventInstances],
   );
 
   useEffect(() => {
@@ -583,9 +584,9 @@ const WeeksVisualization = () => {
   }, [isMenuCollapsed]);
 
   useEffect(() => {
-    hoveredEventWeekIndicesRef.current = hoveredEventWeekIndices;
+    hoveredEventMonthIndicesRef.current = hoveredEventMonthIndices;
     hoverAnimationActiveRef.current = true;
-  }, [hoveredEventWeekIndices]);
+  }, [hoveredEventMonthIndices]);
 
   useEffect(() => {
     hoveredPeriodInstanceIndexRef.current = hoveredPeriodId
@@ -658,7 +659,7 @@ const WeeksVisualization = () => {
       const mesh = new THREE.InstancedMesh(
         planeGeometry,
         planeMaterial,
-        Math.max(instance.weekIndices.length, 1),
+        Math.max(instance.monthIndices.length, 1),
       );
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       mesh.renderOrder = -1;
@@ -666,14 +667,14 @@ const WeeksVisualization = () => {
       gridGroupRef.current?.add(mesh);
     });
 
-    // Create event overlays, grouped by color so event weeks can override base week color
+    // Create event overlays, grouped by color so event months can override base month color
     eventInstances.forEach((instance) => {
       const geometry = new THREE.CircleGeometry(1, 24);
       const material = new THREE.MeshBasicMaterial({ color: instance.color });
       const mesh = new THREE.InstancedMesh(
         geometry,
         material,
-        Math.max(instance.weekIndices.length, 1),
+        Math.max(instance.monthIndices.length, 1),
       );
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       eventMeshesRef.current.push(mesh);
@@ -755,7 +756,7 @@ const WeeksVisualization = () => {
     let closestRow = -1;
     let closestDist = Infinity;
     for (let r = 0; r < layout.rows; r++) {
-      const decade = Math.floor((r * layout.cols) / WEEKS_PER_DECADE);
+      const decade = Math.floor((r * layout.cols) / MONTHS_PER_DECADE);
       const rowY = layout.startY - r * layout.cellSize - decade * layout.cellSize * DECADE_GAP_RATIO;
       const dist = Math.abs(localPoint.y - rowY);
       if (dist < closestDist) {
@@ -771,19 +772,19 @@ const WeeksVisualization = () => {
       col >= layout.cols ||
       closestRow === -1 ||
       closestDist > layout.cellSize / 2 ||
-      index >= weeks.length
+      index >= months.length
     ) {
       setHoverInfo(null);
       return;
     }
 
-    const week = weeks[index];
-    const overlay = weekOverlays.get(index);
+    const month = months[index];
+    const overlay = monthOverlays.get(index);
 
     setHoverInfo({
       clientX: event.clientX,
       clientY: event.clientY,
-      label: `Week ${formatDisplayDate(week.date)}`,
+      label: `Month ${formatDisplayDate(month.date)}`,
       events: overlay?.events.map(
         (e) => `${e.label} ${formatPartialDate(e.date)}`,
       ),
@@ -831,4 +832,4 @@ const WeeksVisualization = () => {
   );
 };
 
-export default WeeksVisualization;
+export default MonthsVisualization;

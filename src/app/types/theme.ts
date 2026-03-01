@@ -15,6 +15,7 @@ export interface ColorTheme {
 
 export interface LayoutState {
   isMenuCollapsed: boolean;
+  viewMode: 'weeks' | 'months';
   focusWeekIndex: number | null;
   resetView: boolean;
   hoveredEventId: string | null;

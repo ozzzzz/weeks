@@ -80,6 +80,7 @@ const defaultThemeState: ThemeState = {
 
 const defaultLayoutState: LayoutState = {
     isMenuCollapsed: true,
+    viewMode: 'weeks',
     focusWeekIndex: null,
     resetView: false,
     hoveredEventId: null,
@@ -244,6 +245,9 @@ const layoutSlice = createSlice({
         setHoveredPeriod(state, action: PayloadAction<string | null>) {
             state.hoveredPeriodId = action.payload;
             if (action.payload) state.hoveredEventId = null;
+        },
+        setViewMode(state, action: PayloadAction<'weeks' | 'months'>) {
+            state.viewMode = action.payload;
         },
     },
 });
