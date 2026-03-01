@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Accordion,
   ActionIcon,
@@ -30,6 +30,12 @@ const CalendarList = () => {
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+
+  useEffect(() => {
+    if (!activeCalendarId && calendars.length > 0) {
+      dispatch(calendarActions.setActiveCalendar(calendars[0].id));
+    }
+  }, [activeCalendarId, calendars, dispatch]);
 
   const handleKeyActivate =
     (action: () => void) => (e: React.KeyboardEvent) => {

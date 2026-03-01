@@ -43,6 +43,8 @@ const HOVER_LIFT_Z = 0.14;
 const HOVER_EASING = 0.14;
 const HOVER_EPSILON = 0.002;
 const HOVER_FLOAT_SPEED = 0.004;
+const MONTHS_PER_DECADE = 12 * 10;
+const DECADE_GAP_RATIO = 0.5;
 
 const MonthsVisualization = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -373,10 +375,12 @@ const MonthsVisualization = () => {
           candidateCols <= maxColumns;
           candidateCols += 1
         ) {
+          if (MONTHS_PER_DECADE % candidateCols !== 0) continue;
           const candidateRows = Math.ceil(months.length / candidateCols);
+          const candidateNumGaps = Math.floor((candidateRows - 1) * candidateCols / MONTHS_PER_DECADE);
           const candidateCellSize = Math.min(
             width / candidateCols,
-            height / candidateRows,
+            height / (candidateRows + candidateNumGaps * DECADE_GAP_RATIO),
           );
           if (candidateCellSize > bestCell) {
             bestCell = candidateCellSize;
@@ -387,8 +391,9 @@ const MonthsVisualization = () => {
         cols = bestCols;
         rows = Math.ceil(months.length / cols);
         cellSize = bestCell;
+        const numGaps = Math.floor((rows - 1) * cols / MONTHS_PER_DECADE);
         startX = -((cols * cellSize) / 2) + cellSize / 2;
-        startY = (rows * cellSize) / 2 - cellSize / 2;
+        startY = (rows * cellSize + numGaps * cellSize * DECADE_GAP_RATIO) / 2 - cellSize / 2;
 
         layoutRef.current = {
           cols,
@@ -404,6 +409,10 @@ const MonthsVisualization = () => {
       const radius = Math.max(1.2, (cellSize * 0.4) / 2);
       const thickness = Math.max(0.6, radius * 0.3);
       const now = performance.now();
+      const getItemY = (index: number, row: number): number => {
+        const decade = Math.floor((row * cols) / MONTHS_PER_DECADE);
+        return startY - row * cellSize - decade * cellSize * DECADE_GAP_RATIO;
+      };
 
       if (hoverProgressRef.current.length !== months.length) {
         hoverProgressRef.current = new Float32Array(months.length);
@@ -447,7 +456,7 @@ const MonthsVisualization = () => {
         const col = index % cols;
         const row = Math.floor(index / cols);
         const x = startX + col * cellSize;
-        const y = startY - row * cellSize;
+        const y = getItemY(index, row);
 
         const month = months[index];
         const mesh = meshes[month.status];
@@ -510,7 +519,7 @@ const MonthsVisualization = () => {
           const col = monthIndex % cols;
           const row = Math.floor(monthIndex / cols);
           const x = startX + col * cellSize;
-          const y = startY - row * cellSize;
+          const y = getItemY(monthIndex, row);
 
           dummy.position.set(x, y, -0.08);
           dummy.scale.set(bgWidth, bgHeight, 1);
@@ -531,7 +540,7 @@ const MonthsVisualization = () => {
           const col = monthIndex % cols;
           const row = Math.floor(monthIndex / cols);
           const x = startX + col * cellSize;
-          const y = startY - row * cellSize;
+          const y = getItemY(monthIndex, row);
           const hoverAmount = hoverProgress[monthIndex] ?? 0;
           const floatAmount = getFloatMultiplier(hoverAmount, monthIndex);
           const scaleMultiplier =
@@ -744,16 +753,25 @@ const MonthsVisualization = () => {
     const col = Math.floor(
       (localPoint.x - layout.startX + layout.cellSize / 2) / layout.cellSize,
     );
-    const row = Math.floor(
-      (layout.startY - localPoint.y + layout.cellSize / 2) / layout.cellSize,
-    );
+    let closestRow = -1;
+    let closestDist = Infinity;
+    for (let r = 0; r < layout.rows; r++) {
+      const decade = Math.floor((r * layout.cols) / MONTHS_PER_DECADE);
+      const rowY = layout.startY - r * layout.cellSize - decade * layout.cellSize * DECADE_GAP_RATIO;
+      const dist = Math.abs(localPoint.y - rowY);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestRow = r;
+      }
+    }
+    const row = closestRow;
     const index = row * layout.cols + col;
 
     if (
       col < 0 ||
       col >= layout.cols ||
-      row < 0 ||
-      row >= layout.rows ||
+      closestRow === -1 ||
+      closestDist > layout.cellSize / 2 ||
       index >= months.length
     ) {
       setHoverInfo(null);
