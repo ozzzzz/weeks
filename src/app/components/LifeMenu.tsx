@@ -93,10 +93,10 @@ const LifeMenu = () => {
     dispatch(layoutActions.toggleMenu());
   };
 
-  // Ctrl/⌘+\ toggles sidebar
+  // "/" toggles sidebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
+      if (e.key === "/") {
         e.preventDefault();
         dispatch(layoutActions.toggleMenu());
       }
@@ -294,7 +294,7 @@ const LifeMenu = () => {
 
       {/* Toggle button */}
       <Tooltip
-        label={isMenuCollapsed ? "Open (Ctrl+\\)" : "Close (Ctrl+\\)"}
+        label={isMenuCollapsed ? "Open (/)" : "Close (/)"}
         position="right"
       >
         <ActionIcon
