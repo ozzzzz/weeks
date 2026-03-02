@@ -54,6 +54,7 @@ const CalendarList = () => {
       name: "New Calendar",
       events: [],
       periods: [],
+      isVisible: true,
     };
     dispatch(calendarActions.upsertCalendar(newCalendar));
     dispatch(calendarActions.setActiveCalendar(newCalendar.id));
