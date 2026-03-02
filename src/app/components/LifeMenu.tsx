@@ -107,8 +107,10 @@ const LifeMenu = () => {
       return;
     const demo = buildDemoState();
     dispatch(lifeActions.setLifeProfile(demo.profile));
+    if (demo.weekColors) dispatch(lifeActions.setWeekColors(demo.weekColors));
     dispatch(calendarActions.setCalendars(demo.calendars));
     dispatch(calendarActions.setActiveCalendar(demo.activeCalendarId ?? null));
+    if (demo.viewMode) dispatch(layoutActions.setViewMode(demo.viewMode as 'weeks' | 'months'));
     dispatch(layoutActions.setMenuCollapsed(false));
   };
 
