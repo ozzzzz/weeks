@@ -4,18 +4,11 @@ export interface WeekColors {
   extra: string;
 }
 
-export interface ColorTheme {
-  id: string;
-  name: string;
-  weeks: WeekColors;
-  accent: string; // used for calendar marks and interactive elements
-  background: string;
-  text: string;
-}
+export type ViewMode = 'weeks' | 'months';
 
 export interface LayoutState {
   isMenuCollapsed: boolean;
-  viewMode: 'weeks' | 'months';
+  viewMode: ViewMode;
   focusWeekIndex: number | null;
   resetView: boolean;
   hoveredEventId: string | null;

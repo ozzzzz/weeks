@@ -2,27 +2,30 @@ import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
     CalendarEvent,
     CalendarPeriod,
-    ColorTheme,
     LayoutState,
     LifeProfile,
     REAL_LIFE_EXPECTANCY_YEARS,
     EXTRA_LIFE_EXPECTANCY_YEARS,
     Calendar,
+    WeekColors,
+    ViewMode,
 } from './types';
-import { clampExpectancyYears } from './utils/calculations';
+import { clampRealExpectancyYears, clampExtraExpectancyYears } from './utils/calculations';
+
+export const defaultWeekColors: WeekColors = {
+    lived: '#0f2d52',
+    remaining: '#7dd3fc',
+    extra: '#e0f2fe',
+};
 
 interface LifeState {
     profile: LifeProfile;
+    weekColors: WeekColors;
 }
 
 interface CalendarState {
     calendars: Calendar[];
     activeCalendarId: string | null;
-}
-
-interface ThemeState {
-    themes: ColorTheme[];
-    activeThemeId: string;
 }
 
 const today = new Date();
@@ -38,6 +41,7 @@ const defaultLifeState: LifeState = {
         realExpectancyYears: REAL_LIFE_EXPECTANCY_YEARS,
         extraExpectancyYears: EXTRA_LIFE_EXPECTANCY_YEARS,
     },
+    weekColors: defaultWeekColors,
 };
 
 const defaultCalendarsState: CalendarState = {
@@ -60,24 +64,6 @@ const defaultCalendarsState: CalendarState = {
     activeCalendarId: 'cdf1a3f0-31f0-4a3f-94d0-c18f2c938853',
 };
 
-const defaultTheme: ColorTheme = {
-    id: 'default',
-    name: 'Sky',
-    weeks: {
-        lived: '#0f2d52',
-        remaining: '#7dd3fc',
-        extra: '#e0f2fe',
-    },
-    accent: '#2563eb',
-    background: '#f8fafc',
-    text: '#0f172a',
-};
-
-const defaultThemeState: ThemeState = {
-    themes: [defaultTheme],
-    activeThemeId: defaultTheme.id,
-};
-
 const defaultLayoutState: LayoutState = {
     isMenuCollapsed: true,
     viewMode: 'weeks',
@@ -92,14 +78,10 @@ const lifeSlice = createSlice({
     initialState: defaultLifeState,
     reducers: {
         setLifeProfile(state, action: PayloadAction<LifeProfile>) {
-            const clamped = clampExpectancyYears(
-                action.payload.realExpectancyYears,
-                action.payload.extraExpectancyYears,
-            );
             state.profile = {
                 ...action.payload,
-                realExpectancyYears: clamped.real,
-                extraExpectancyYears: clamped.extra,
+                realExpectancyYears: clampRealExpectancyYears(action.payload.realExpectancyYears),
+                extraExpectancyYears: clampExtraExpectancyYears(action.payload.extraExpectancyYears),
             };
         },
         setDateOfBirth(state, action: PayloadAction<LifeProfile['dateOfBirth']>) {
@@ -109,14 +91,16 @@ const lifeSlice = createSlice({
             state.profile.name = action.payload;
         },
         setRealExpectancyYears(state, action: PayloadAction<number>) {
-            const clamped = clampExpectancyYears(action.payload, state.profile.extraExpectancyYears);
-            state.profile.realExpectancyYears = clamped.real;
-            state.profile.extraExpectancyYears = clamped.extra;
+            state.profile.realExpectancyYears = clampRealExpectancyYears(action.payload);
         },
         setExtraExpectancyYears(state, action: PayloadAction<number>) {
-            const clamped = clampExpectancyYears(state.profile.realExpectancyYears, action.payload);
-            state.profile.realExpectancyYears = clamped.real;
-            state.profile.extraExpectancyYears = clamped.extra;
+            state.profile.extraExpectancyYears = clampExtraExpectancyYears(action.payload);
+        },
+        setWeekColors(state, action: PayloadAction<WeekColors>) {
+            state.weekColors = action.payload;
+        },
+        setWeekColor(state, action: PayloadAction<{ key: keyof WeekColors; value: string }>) {
+            state.weekColors[action.payload.key] = action.payload.value;
         },
     },
 });
@@ -202,26 +186,6 @@ const calendarSlice = createSlice({
     },
 });
 
-const themeSlice = createSlice({
-    name: 'theme',
-    initialState: defaultThemeState,
-    reducers: {
-        setActiveTheme(state, action: PayloadAction<string>) {
-            const exists = state.themes.some((theme) => theme.id === action.payload);
-            state.activeThemeId = exists ? action.payload : state.activeThemeId;
-        },
-        upsertTheme(state, action: PayloadAction<ColorTheme>) {
-            const index = state.themes.findIndex((theme) => theme.id === action.payload.id);
-            if (index >= 0) {
-                state.themes[index] = action.payload;
-                return;
-            }
-
-            state.themes.push(action.payload);
-        },
-    },
-});
-
 const layoutSlice = createSlice({
     name: 'layout',
     initialState: defaultLayoutState,
@@ -246,7 +210,7 @@ const layoutSlice = createSlice({
             state.hoveredPeriodId = action.payload;
             if (action.payload) state.hoveredEventId = null;
         },
-        setViewMode(state, action: PayloadAction<'weeks' | 'months'>) {
+        setViewMode(state, action: PayloadAction<ViewMode>) {
             state.viewMode = action.payload;
         },
     },
@@ -256,7 +220,6 @@ export const store = configureStore({
     reducer: {
         life: lifeSlice.reducer,
         calendar: calendarSlice.reducer,
-        theme: themeSlice.reducer,
         layout: layoutSlice.reducer,
     },
     devTools: true,
@@ -264,7 +227,6 @@ export const store = configureStore({
 
 export const lifeActions = lifeSlice.actions;
 export const calendarActions = calendarSlice.actions;
-export const themeActions = themeSlice.actions;
 export const layoutActions = layoutSlice.actions;
 
 export type RootState = ReturnType<typeof store.getState>;

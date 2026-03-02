@@ -7,20 +7,19 @@ import { IconBrandGithub } from '@tabler/icons-react';
 import { useAppSelector } from '../hooks';
 import { buildWeekPoints } from '../utils/weeks';
 import { buildMonthPoints } from '../utils/months';
-import { WeekStatus } from '../types';
+import { ViewMode, WeekStatus } from '../types';
 import { MetaText } from './ui/text';
 
 const statusOrder: WeekStatus[] = ['lived', 'remaining', 'extra'];
 
 interface NavigationProps {
-  viewMode: 'weeks' | 'months';
-  onViewModeChange: (mode: 'weeks' | 'months') => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
 }
 
 const Navigation = ({ viewMode, onViewModeChange }: NavigationProps) => {
   const lifeProfile = useAppSelector((state) => state.life.profile);
-  const themeState = useAppSelector((state) => state.theme);
-  const activeTheme = themeState.themes.find((t) => t.id === themeState.activeThemeId) ?? themeState.themes[0];
+  const weekColors = useAppSelector((state) => state.life.weekColors);
 
   const points = useMemo(
     () => viewMode === 'weeks' ? buildWeekPoints(lifeProfile) : buildMonthPoints(lifeProfile),
@@ -39,7 +38,7 @@ const Navigation = ({ viewMode, onViewModeChange }: NavigationProps) => {
     [points],
   );
 
-  const colorForStatus = (status: WeekStatus) => activeTheme?.weeks[status] ?? '#ccc';
+  const colorForStatus = (status: WeekStatus) => weekColors[status];
 
   const otherMode = viewMode === 'weeks' ? 'months' : 'weeks';
 

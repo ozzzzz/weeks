@@ -12,9 +12,9 @@ const App = () => {
     const persisted = loadPersistedState();
     if (persisted) {
       store.dispatch(lifeActions.setLifeProfile(persisted.profile));
+      store.dispatch(lifeActions.setWeekColors(persisted.weekColors));
       store.dispatch(calendarActions.setCalendars(persisted.calendars));
       store.dispatch(calendarActions.setActiveCalendar(persisted.activeCalendarId));
-      store.dispatch(layoutActions.setMenuCollapsed(persisted.isMenuCollapsed));
       store.dispatch(layoutActions.setViewMode(persisted.viewMode));
     }
 
@@ -22,9 +22,9 @@ const App = () => {
       const state = store.getState();
       savePersistedState({
         profile: state.life.profile,
+        weekColors: state.life.weekColors,
         calendars: state.calendar.calendars,
         activeCalendarId: state.calendar.activeCalendarId,
-        isMenuCollapsed: state.layout.isMenuCollapsed,
         viewMode: state.layout.viewMode,
       });
     });

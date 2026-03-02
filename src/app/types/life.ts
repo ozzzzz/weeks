@@ -12,13 +12,7 @@ export interface LifeProfile {
 
 export type WeekStatus = 'lived' | 'remaining' | 'extra';
 
-export interface WeekPoint {
-  index: number;
-  date: Date;
-  status: WeekStatus;
-}
-
-export interface MonthPoint {
+export interface LifePoint {
   index: number;
   date: Date;
   status: WeekStatus;

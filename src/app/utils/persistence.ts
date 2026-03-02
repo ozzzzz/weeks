@@ -1,27 +1,15 @@
-import { Calendar, LifeProfile } from '../types';
+import { Calendar, LifeProfile, ViewMode, WeekColors } from '../types';
+import { defaultWeekColors } from '../store';
 
 const STORAGE_KEY = 'weeks:state:v1';
 
 export interface PersistedState {
   profile: LifeProfile;
+  weekColors: WeekColors;
   calendars: Calendar[];
   activeCalendarId: string | null;
-  isMenuCollapsed: boolean;
-  viewMode: 'weeks' | 'months';
+  viewMode: ViewMode;
 }
-
-export const loadPersistedState = (): PersistedState | null => {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as PersistedState;
-  } catch (error) {
-    console.warn('Failed to load persisted state', error);
-    return null;
-  }
-};
 
 export const savePersistedState = (state: PersistedState) => {
   if (typeof window === 'undefined') return;
@@ -50,7 +38,7 @@ const isLifeProfile = (value: unknown): value is LifeProfile => {
   );
 };
 
-const isCalendar = (value: unknown): value is Calendar => {
+const isCalendar = (value: unknown): boolean => {
   if (!isObject(value)) return false;
   return (
     typeof value.id === 'string' &&
@@ -60,30 +48,60 @@ const isCalendar = (value: unknown): value is Calendar => {
   );
 };
 
-export const isPersistedState = (value: unknown): value is PersistedState => {
+const isWeekColors = (value: unknown): value is WeekColors => {
   if (!isObject(value)) return false;
-
   return (
-    isLifeProfile(value.profile) &&
-    Array.isArray(value.calendars) &&
-    value.calendars.every(isCalendar) &&
-    (value.activeCalendarId === null || typeof value.activeCalendarId === 'string') &&
-    typeof value.isMenuCollapsed === 'boolean' &&
-    (value.viewMode === undefined || value.viewMode === 'weeks' || value.viewMode === 'months')
+    typeof value.lived === 'string' &&
+    typeof value.remaining === 'string' &&
+    typeof value.extra === 'string'
   );
 };
 
-export const normalizePersistedState = (state: Omit<PersistedState, 'viewMode'> & { viewMode?: 'weeks' | 'months' }): PersistedState => ({
-  ...state,
-  viewMode: state.viewMode ?? 'weeks',
+// Accepts both current and legacy formats (weekColors optional, isMenuCollapsed ignored)
+const isValidRaw = (value: unknown): value is Record<string, unknown> => {
+  if (!isObject(value)) return false;
+  return (
+    isLifeProfile(value.profile) &&
+    Array.isArray(value.calendars) &&
+    (value.calendars as unknown[]).every(isCalendar) &&
+    (value.activeCalendarId === null || typeof value.activeCalendarId === 'string') &&
+    (value.viewMode === undefined || value.viewMode === 'weeks' || value.viewMode === 'months') // ViewMode values
+  );
+};
+
+const normalizePersistedState = (raw: Record<string, unknown>): PersistedState => ({
+  profile: raw.profile as LifeProfile,
+  weekColors: isWeekColors(raw.weekColors) ? raw.weekColors : defaultWeekColors,
+  calendars: (raw.calendars as Record<string, unknown>[]).map((c) => ({
+    id: c.id as string,
+    name: c.name as string,
+    events: c.events as Calendar['events'],
+    periods: c.periods as Calendar['periods'],
+    isVisible: typeof c.isVisible === 'boolean' ? c.isVisible : true,
+  })),
+  activeCalendarId: (raw.activeCalendarId as string | null) ?? null,
+  viewMode: (raw.viewMode as ViewMode) ?? 'weeks',
 });
 
 export const parsePersistedState = (json: string): PersistedState | null => {
   try {
     const parsed = JSON.parse(json) as unknown;
-    if (!isPersistedState(parsed)) return null;
+    if (!isValidRaw(parsed)) return null;
     return normalizePersistedState(parsed);
   } catch {
+    return null;
+  }
+};
+
+export const loadPersistedState = (): PersistedState | null => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return parsePersistedState(raw);
+  } catch (error) {
+    console.warn('Failed to load persisted state', error);
     return null;
   }
 };

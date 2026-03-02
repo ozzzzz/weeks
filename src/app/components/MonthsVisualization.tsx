@@ -82,7 +82,7 @@ const MonthsVisualization = () => {
   const activeCalendarId = useAppSelector(
     (state) => state.calendar.activeCalendarId,
   );
-  const focusWeekIndex = useAppSelector((state) => state.layout.focusWeekIndex);
+  const focusMonthIndex = useAppSelector((state) => state.layout.focusWeekIndex);
   const resetView = useAppSelector((state) => state.layout.resetView);
   const hoveredEventId = useAppSelector((state) => state.layout.hoveredEventId);
   const hoveredPeriodId = useAppSelector(
@@ -91,10 +91,7 @@ const MonthsVisualization = () => {
   const isMenuCollapsed = useAppSelector(
     (state) => state.layout.isMenuCollapsed,
   );
-  const themeState = useAppSelector((state) => state.theme);
-  const activeTheme =
-    themeState.themes.find((theme) => theme.id === themeState.activeThemeId) ??
-    themeState.themes[0];
+  const weekColors = useAppSelector((state) => state.life.weekColors);
 
   const months = useMemo(() => buildMonthPoints(lifeProfile), [lifeProfile]);
 
@@ -116,13 +113,13 @@ const MonthsVisualization = () => {
     return activeCalendars.flatMap((calendar) =>
       calendar.periods
         .map((period) => {
-          const startWeek = dateToMonthIndex(
+          const startMonth = dateToMonthIndex(
             period.start,
             lifeProfile.dateOfBirth,
           );
-          const endWeek = dateToMonthIndex(period.end, lifeProfile.dateOfBirth);
-          const start = Math.max(0, Math.min(totalMonths - 1, startWeek));
-          const end = Math.max(0, Math.min(totalMonths - 1, endWeek));
+          const endMonth = dateToMonthIndex(period.end, lifeProfile.dateOfBirth);
+          const start = Math.max(0, Math.min(totalMonths - 1, startMonth));
+          const end = Math.max(0, Math.min(totalMonths - 1, endMonth));
 
           if (end < 0 || start > totalMonths - 1 || end < start) {
             return null;
@@ -201,11 +198,11 @@ const MonthsVisualization = () => {
 
   const colorMap = useMemo(
     () => ({
-      lived: new THREE.Color(activeTheme?.weeks.lived ?? "#1e293b"),
-      remaining: new THREE.Color(activeTheme?.weeks.remaining ?? "#e2e8f0"),
-      extra: new THREE.Color(activeTheme?.weeks.extra ?? "#fcd34d"),
+      lived: new THREE.Color(weekColors.lived),
+      remaining: new THREE.Color(weekColors.remaining),
+      extra: new THREE.Color(weekColors.extra),
     }),
-    [activeTheme],
+    [weekColors],
   );
 
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
@@ -304,12 +301,9 @@ const MonthsVisualization = () => {
 
   useEffect(() => {
     if (rendererRef.current) {
-      rendererRef.current.setClearColor(
-        activeTheme?.background ?? "#f8fafc",
-        1,
-      );
+      rendererRef.current.setClearColor("#f8fafc", 1);
     }
-  }, [activeTheme]);
+  }, []);
 
   const updateLayout = useCallback(
     (animateOnly = false) => {
@@ -599,7 +593,7 @@ const MonthsVisualization = () => {
     const scene = sceneRef.current;
     if (!scene || !rendererRef.current) return;
 
-    // Clean up existing week meshes
+    // Clean up existing month meshes
     statusOrder.forEach((status) => {
       const existing = meshRefs.current[status];
       if (existing) {
@@ -610,7 +604,7 @@ const MonthsVisualization = () => {
       }
     });
 
-    // Create week meshes
+    // Create month meshes
     statusOrder.forEach((status) => {
       const geometry = new THREE.CircleGeometry(1, 24);
       const material = new THREE.MeshBasicMaterial({ color: colorMap[status] });
@@ -640,9 +634,7 @@ const MonthsVisualization = () => {
     periodMeshesRef.current = [];
 
     // Create period background meshes, one per period to lock in color
-    const backgroundColor = new THREE.Color(
-      activeTheme?.background ?? "#f8fafc",
-    );
+    const backgroundColor = new THREE.Color("#f8fafc");
 
     periodInstances.forEach((instance) => {
       const planeGeometry = new THREE.PlaneGeometry(1, 1);
@@ -705,9 +697,9 @@ const MonthsVisualization = () => {
 
   // Focus week zoom disabled
   useEffect(() => {
-    if (focusWeekIndex == null) return;
+    if (focusMonthIndex == null) return;
     dispatch(layoutActions.setFocusWeek(null));
-  }, [focusWeekIndex, dispatch]);
+  }, [focusMonthIndex, dispatch]);
 
   // Reset view to origin when switching calendars (no animation)
   useEffect(() => {

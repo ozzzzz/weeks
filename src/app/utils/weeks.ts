@@ -1,5 +1,4 @@
-import { LifeProfile, WeekPoint, WeekStatus } from "../types";
-import { MAX_TOTAL_EXPECTANCY_YEARS } from "./calculations";
+import { LifeProfile, LifePoint, WeekStatus } from "../types";
 import { partialDateToDate } from "./dates";
 
 const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
@@ -11,12 +10,8 @@ const getWeekStatus = (index: number, livedWeeks: number, realWeeks: number): We
   return 'extra';
 };
 
-export const buildWeekPoints = (profile: LifeProfile): WeekPoint[] => {
-  const totalYears = Math.min(
-    profile.realExpectancyYears + profile.extraExpectancyYears,
-    MAX_TOTAL_EXPECTANCY_YEARS,
-  );
-
+export const buildWeekPoints = (profile: LifeProfile): LifePoint[] => {
+  const totalYears = profile.realExpectancyYears + profile.extraExpectancyYears;
   const totalWeeks = totalYears * WEEKS_PER_YEAR;
   if (totalWeeks <= 0) return [];
 
@@ -26,7 +21,7 @@ export const buildWeekPoints = (profile: LifeProfile): WeekPoint[] => {
   const clampedLivedWeeks = Math.max(0, Math.min(livedWeeks, totalWeeks - 1));
   const realWeeks = profile.realExpectancyYears * WEEKS_PER_YEAR;
 
-  const weeks: WeekPoint[] = [];
+  const weeks: LifePoint[] = [];
 
   for (let index = 0; index < totalWeeks; index += 1) {
     weeks.push({
