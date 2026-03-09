@@ -23,20 +23,14 @@ npm install
 npm run dev
 ```
 
-## Build
+## Docker
 
 ```bash
-npm run build
-npm run preview
+docker build -t weeks .
+docker run -p 8080:80 weeks
 ```
 
-## GitHub Pages deploy
-
-```bash
-npm run deploy
-```
-
-The Vite config uses `base: "./"` so static assets work on GitHub Pages subpaths.
+Then open [http://localhost:8080](http://localhost:8080).
 
 ## Project structure
 
